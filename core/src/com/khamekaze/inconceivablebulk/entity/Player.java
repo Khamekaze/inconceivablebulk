@@ -5,6 +5,8 @@ import com.badlogic.gdx.Input;
 import com.khamekaze.inconceivablebulk.MainGame;
 
 public class Player extends Entity {
+	
+	private boolean groundPound = false;
 
 	public Player(int hp, int attackDamage, int attackType, int movementSpeed) {
 		super(hp, attackDamage, attackType, movementSpeed);
@@ -14,8 +16,32 @@ public class Player extends Entity {
 	
 	public void update(float delta) {
 //		System.out.println("X: " + x + " Y: " + y);
+		
+		if(isFacingLeft()) {
+			getAttackHitbox().setPosition(x - 25 - 10, y + 25);
+		} else if(isFacingRight()) {
+			getAttackHitbox().setPosition(x + 25, y + 25);
+		}
+		
+		if(isAttacking() && getAttackLength() > 0) {
+			setAttackLength(getAttackLength() - 0.1f);
+			if(getAttackLength() < 0) {
+				setAttackLength(0);
+			}
+		} else if(isAttacking() && getAttackLength() == 0) {
+			setIsAttacking(false);
+		} else if(!isAttacking() && getAttackLength() != 1) {
+			setAttackLength(1);
+		}
+		
 		applyGravity(delta);
 		handleInput(delta);
+		if(groundPound) {
+			specialAttack();
+			if(grounded) {
+				groundPound = false;
+			}
+		}
 	}
 	
 	public void handleInput(float delta) {
@@ -36,7 +62,7 @@ public class Player extends Entity {
 	
 	public void attack() {
 		if(grounded) {
-			
+			setIsAttacking(true);
 			if(isFacingLeft()) {
 				System.out.println("GROUND ATTACK LEFT");
 			} else if(isFacingRight()) {
@@ -46,6 +72,7 @@ public class Player extends Entity {
 			
 			if(Gdx.input.isKeyPressed(Input.Keys.S)) {
 				System.out.println("DOWNWARD ATTACK");
+				groundPound = true;
 			}
 			
 			if(isFacingLeft() && !Gdx.input.isKeyPressed(Input.Keys.S)) {
@@ -54,6 +81,52 @@ public class Player extends Entity {
 				System.out.println("AIR ATTACK RIGHT");
 			}
 		}
-		
+	}
+	
+	public void specialAttack() {
+		if(!isAttacking()) {
+			setIsAttacking(true);
+		}
+		getAttackHitbox().set(getX() - 25, getY() - 25, getHitBox().width, 2);
+		setY(getY() - 35);
+		if(getY() < 50) {
+			setY(50);
+			setAttackLength(0);
+			grounded = true;
+			if(isFacingLeft()) {
+				getAttackHitbox().setSize(10, 10);
+				getAttackHitbox().setPosition(x - 25 - 10, y + 25);
+			} else if(isFacingRight()) {
+				getAttackHitbox().setSize(10, 10);
+				getAttackHitbox().setPosition(x + 25, y + 25);
+			}
+		}
+	}
+	
+	@Override
+	public void move(int direction) {
+		if(direction == getMoveLeft()) {
+			if(grounded && attacking) {
+				setFacingLeft(true);
+				setFacingRight(false);
+			} else {
+				if(!groundPound) {
+					x -= getMovementSpeed();
+					setFacingLeft(true);
+					setFacingRight(false);
+				}
+			}
+		} else if(direction == getMoveRight()) {
+			if(grounded && attacking) {
+				setFacingLeft(false);
+				setFacingRight(true);
+			} else {
+				if(!groundPound) {
+					x += getMovementSpeed();
+					setFacingLeft(false);
+					setFacingRight(true);
+				}
+			}
+		}
 	}
 }

@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.khamekaze.inconceivablebulk.entity.Player;
+import com.khamekaze.inconceivablebulk.screen.ScreenManager;
 
 public class TestState {
 	
@@ -22,10 +23,21 @@ public class TestState {
 	}
 	
 	public void render(SpriteBatch sb) {
+		renderer.setProjectionMatrix(ScreenManager.getCurrentScreen().camera.combined);
 		renderer.begin(ShapeType.Line);
+		
 		renderer.setColor(Color.BLACK);
 		renderer.rect(player.getHitBox().x, player.getHitBox().y, player.getHitBox().width, player.getHitBox().height);
+		
+		if(player.isAttacking()) {
+			renderer.setColor(Color.RED);
+			renderer.rect(player.getAttackHitbox().x, player.getAttackHitbox().y, player.getAttackHitbox().width, player.getAttackHitbox().height);
+		}
 		renderer.end();
+	}
+	
+	public Player getPlayer() {
+		return player;
 	}
 
 }

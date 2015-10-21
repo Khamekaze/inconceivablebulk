@@ -11,21 +11,29 @@ public class TestScreen extends Screen {
 	@Override
 	public void create() {
 		test = new TestState();
+		camera.position.set(camera.viewportWidth/2, camera.viewportHeight/2, 0);
+		Gdx.input.setInputProcessor(inputManager);
 	}
 
 	@Override
 	public void update() {
+//		camera.position.set(test.getPlayer().getX(), camera.viewportHeight/2, 0);
+		camera.position.set(camera.viewportWidth/2, camera.viewportHeight/2, 0);
+		camera.update();
 		test.update(Gdx.graphics.getDeltaTime());
 	}
 
 	@Override
 	public void render(SpriteBatch sb) {
+		sb.setProjectionMatrix(camera.combined);
+		sb.begin();
 		test.render(sb);
+		sb.end();
 	}
 
 	@Override
 	public void resize(int width, int height) {
-		
+		camera.translate(camera.viewportWidth / 2, camera.viewportHeight / 2, 0);
 	}
 
 	@Override

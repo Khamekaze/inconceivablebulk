@@ -10,16 +10,16 @@ public class Entity {
 	
 	private boolean facingRight = false, facingLeft = false;
 
-	protected boolean grounded = false;
+	protected boolean grounded = false, attacking = false;
 	
 	private int hp, maxHp, attackDamage, attackType, movementSpeed;
-	private float gravity = 0.4f;
+	private float gravity = 0.4f, attackLength = 1;
 
 	protected float y, x;
 
 	private float jumpHeight = 10;
 	
-	private Rectangle hitBox;
+	private Rectangle hitBox, attackHitbox;
 	
 	public Entity(int hp, int attackDamage, int attackType, int movementSpeed) {
 		this.hp = hp;
@@ -28,17 +28,28 @@ public class Entity {
 		this.attackType = attackType;
 		this.movementSpeed = movementSpeed;
 		hitBox = new Rectangle(MainGame.WIDTH / 2, MainGame.HEIGHT / 2, 50, 50);
+		attackHitbox = new Rectangle(MainGame.WIDTH / 2, MainGame.HEIGHT / 2, 10, 10);
 	}
 	
 	public void move(int direction) {
 		if(direction == moveLeft) {
-			x -= movementSpeed;
-			facingLeft = true;
-			facingRight = false;
+			if(grounded && attacking) {
+				facingLeft = true;
+				facingRight = false;
+			} else {
+				x -= movementSpeed;
+				facingLeft = true;
+				facingRight = false;
+			}
 		} else if(direction == moveRight) {
-			x += movementSpeed;
-			facingRight = true;
-			facingLeft = false;
+			if(grounded && attacking) {
+				facingLeft = false;
+				facingRight = true;
+			} else {
+				x += movementSpeed;
+				facingLeft = false;
+				facingRight = true;
+			}
 		}
 	}
 	
@@ -83,6 +94,28 @@ public class Entity {
 	public void setPosition(float x, float y){
 		this.x = x;
 		this.y = y;
+		hitBox.x = x - 25;
+		hitBox.y = y;
+	}
+	
+	public float getAttackLength() {
+		return attackLength;
+	}
+	
+	public void setAttackLength(float attackLength) {
+		this.attackLength = attackLength;
+	}
+	
+	public boolean isAttacking() {
+		return attacking;
+	}
+	
+	public void setIsAttacking(boolean attacking) {
+		this.attacking = attacking;
+	}
+	
+	public Rectangle getAttackHitbox() {
+		return attackHitbox;
 	}
 
 	public int getStopped() {
