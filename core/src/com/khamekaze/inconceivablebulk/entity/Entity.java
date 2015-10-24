@@ -14,6 +14,8 @@ public class Entity {
 	
 	private int hp, maxHp, attackDamage, attackType, movementSpeed;
 	private float gravity = 0.4f, attackLength = 1;
+	
+	private boolean damageDelay = false;
 
 	protected float y, x;
 
@@ -28,7 +30,11 @@ public class Entity {
 		this.attackType = attackType;
 		this.movementSpeed = movementSpeed;
 		hitBox = new Rectangle(MainGame.WIDTH / 2, MainGame.HEIGHT / 2, 50, 50);
-		attackHitbox = new Rectangle(MainGame.WIDTH / 2, MainGame.HEIGHT / 2, 10, 10);
+		attackHitbox = new Rectangle(MainGame.WIDTH / 2, MainGame.HEIGHT / 2, 35, 10);
+	}
+	
+	public void update(float delta) {
+		
 	}
 	
 	public void move(int direction) {
@@ -57,6 +63,7 @@ public class Entity {
 		if(grounded) {
 			y += jumpHeight;
 			hitBox.y = y;
+			hitBox.x = x;
 			grounded = false;
 		}
 	}
@@ -73,14 +80,25 @@ public class Entity {
 			}
 		}
 		
-		hitBox.x = x - 25;
+		hitBox.x = x;
 		hitBox.y = y;
 	}
 	
+	public void attacked(Rectangle attacker) {
+		if(attacker.getX() > x) {
+			x -= 1f;
+		} else if(attacker.getX() < x) {
+			x += 1f;
+		}
+	}
+	
 	public void takeDamage(int damage) {
-		hp -= damage;
-		if(hp < 0) {
-			hp = 0;
+		if(!damageDelay) {
+			hp -= damage;
+			if(hp < 0) {
+				hp = 0;
+			}
+			damageDelay = true;
 		}
 	}
 	
@@ -91,11 +109,23 @@ public class Entity {
 		}
 	}
 	
+	public boolean checkCollision(Rectangle rect) {
+		return rect.overlaps(hitBox);
+	}
+	
 	public void setPosition(float x, float y){
 		this.x = x;
 		this.y = y;
-		hitBox.x = x - 25;
+		hitBox.x = x;
 		hitBox.y = y;
+	}
+	
+	public boolean getDamageDelay() {
+		return damageDelay;
+	}
+	
+	public void setDamageDelay(boolean damageDelay) {
+		this.damageDelay = damageDelay;
 	}
 	
 	public float getAttackLength() {

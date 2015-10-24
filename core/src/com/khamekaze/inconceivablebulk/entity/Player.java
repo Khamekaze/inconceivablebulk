@@ -18,7 +18,7 @@ public class Player extends Entity {
 //		System.out.println("X: " + x + " Y: " + y);
 		
 		if(isFacingLeft()) {
-			getAttackHitbox().setPosition(x - 25 - 10, y + 25);
+			getAttackHitbox().setPosition(x - 15, y + 25);
 		} else if(isFacingRight()) {
 			getAttackHitbox().setPosition(x + 25, y + 25);
 		}
@@ -28,9 +28,9 @@ public class Player extends Entity {
 			if(getAttackLength() < 0) {
 				setAttackLength(0);
 			}
-		} else if(isAttacking() && getAttackLength() == 0) {
+		} else if(isAttacking() && getAttackLength() == 0 && grounded) {
 			setIsAttacking(false);
-		} else if(!isAttacking() && getAttackLength() != 1) {
+		} else if(!isAttacking() && getAttackLength() != 1 && grounded) {
 			setAttackLength(1);
 		}
 		
@@ -40,6 +40,7 @@ public class Player extends Entity {
 			specialAttack();
 			if(grounded) {
 				groundPound = false;
+				setIsAttacking(false);
 			}
 		}
 	}
@@ -57,6 +58,16 @@ public class Player extends Entity {
 		
 		if(Gdx.input.justTouched()) {
 			attack();
+		}
+		
+		if(grounded) {
+			if(isFacingLeft()) {
+				getAttackHitbox().setSize(40, 10);
+				getAttackHitbox().setPosition(x - 15, y + 25);
+			} else if(isFacingRight()) {
+				getAttackHitbox().setSize(40, 10);
+				getAttackHitbox().setPosition(x + 25, y + 25);
+			}
 		}
 	}
 	
@@ -76,8 +87,10 @@ public class Player extends Entity {
 			}
 			
 			if(isFacingLeft() && !Gdx.input.isKeyPressed(Input.Keys.S)) {
+				setIsAttacking(true);
 				System.out.println("AIR ATTACK LEFT");
 			} else if(isFacingRight() && !Gdx.input.isKeyPressed(Input.Keys.S)) {
+				setIsAttacking(true);
 				System.out.println("AIR ATTACK RIGHT");
 			}
 		}
@@ -87,17 +100,21 @@ public class Player extends Entity {
 		if(!isAttacking()) {
 			setIsAttacking(true);
 		}
-		getAttackHitbox().set(getX() - 25, getY() - 25, getHitBox().width, 2);
+		
 		setY(getY() - 35);
+		getAttackHitbox().set(getX(), getY() - 25, getHitBox().width, 2);
+		if(getAttackHitbox().getY() < 50) {
+			getAttackHitbox().set(getX(), 50, getHitBox().width, 2);
+		}
 		if(getY() < 50) {
 			setY(50);
 			setAttackLength(0);
 			grounded = true;
 			if(isFacingLeft()) {
-				getAttackHitbox().setSize(10, 10);
-				getAttackHitbox().setPosition(x - 25 - 10, y + 25);
+				getAttackHitbox().setSize(40, 10);
+				getAttackHitbox().setPosition(x - 15, y + 25);
 			} else if(isFacingRight()) {
-				getAttackHitbox().setSize(10, 10);
+				getAttackHitbox().setSize(40, 10);
 				getAttackHitbox().setPosition(x + 25, y + 25);
 			}
 		}

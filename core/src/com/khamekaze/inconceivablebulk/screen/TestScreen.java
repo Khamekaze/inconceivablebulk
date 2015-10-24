@@ -17,8 +17,8 @@ public class TestScreen extends Screen {
 
 	@Override
 	public void update() {
-//		camera.position.set(test.getPlayer().getX(), camera.viewportHeight/2, 0);
-		camera.position.set(camera.viewportWidth/2, camera.viewportHeight/2, 0);
+		camera.position.set(test.getPlayer().getX(), camera.viewportHeight/2, 0);
+//		camera.position.set(camera.viewportWidth/2, camera.viewportHeight/2, 0);
 		camera.update();
 		test.update(Gdx.graphics.getDeltaTime());
 	}
