@@ -48,8 +48,8 @@ public class TestState {
 		
 	}
 	
-	public void update(float delta) {
-		player.update(delta);
+	public void update(float delta, boolean slowmo) {
+		player.update(delta, slowmo);
 		for(Entity e : entities) {
 			e.update(delta);
 		}

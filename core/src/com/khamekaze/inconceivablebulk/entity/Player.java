@@ -14,7 +14,7 @@ public class Player extends Entity {
 		y = MainGame.HEIGHT / 2;
 	}
 	
-	public void update(float delta) {
+	public void update(float delta, boolean slowmo) {
 //		System.out.println("X: " + x + " Y: " + y);
 		
 		if(isFacingLeft()) {
@@ -22,7 +22,7 @@ public class Player extends Entity {
 		} else if(isFacingRight()) {
 			getAttackHitbox().setPosition(x + 25, y + 25);
 		}
-		
+
 		if(isAttacking() && getAttackLength() > 0) {
 			setAttackLength(getAttackLength() - 0.1f);
 			if(getAttackLength() < 0) {
@@ -34,8 +34,10 @@ public class Player extends Entity {
 			setAttackLength(1);
 		}
 		
+		handleInput(delta, slowmo);
+		
 		applyGravity(delta);
-		handleInput(delta);
+		
 		if(groundPound) {
 			specialAttack(delta);
 			if(grounded) {
@@ -45,7 +47,7 @@ public class Player extends Entity {
 		}
 	}
 	
-	public void handleInput(float delta) {
+	public void handleInput(float delta, boolean slowmo) {
 		if(Gdx.input.isKeyJustPressed(Input.Keys.SPACE) && isGrounded()) {
 			jump(delta);
 		}
@@ -56,7 +58,7 @@ public class Player extends Entity {
 			move(getMoveRight(), delta);
 		}
 		
-		if(Gdx.input.justTouched()) {
+		if(Gdx.input.justTouched() && !slowmo) {
 			attack();
 		}
 		
@@ -102,7 +104,7 @@ public class Player extends Entity {
 		}
 		
 		setY(getY() - 35 * speed);
-		getAttackHitbox().set(getX(), getY() - 25, getHitBox().width, 2);
+		getAttackHitbox().set(getX(), getY(), getHitBox().width, 2);
 		if(getAttackHitbox().getY() < 50) {
 			getAttackHitbox().set(getX(), 50, getHitBox().width, 2);
 		}

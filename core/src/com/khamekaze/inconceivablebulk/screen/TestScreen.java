@@ -50,7 +50,7 @@ public class TestScreen extends Screen {
 		slowMotion();
 		
 		camera.update();
-		test.update(speed);
+		test.update(speed, slowMotion);
 	}
 
 	@Override
@@ -136,7 +136,7 @@ public class TestScreen extends Screen {
 		
 		if(slowMotion) {
 			slowMotionTime -= 0.1f;
-			speed = 0.1f;
+			speed = 0.01f;
 			if(slowMotionTime <= 0) {
 				slowMotionTime = 0;
 				slowMotion = false;
