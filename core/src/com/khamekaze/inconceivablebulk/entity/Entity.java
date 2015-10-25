@@ -8,7 +8,7 @@ public class Entity {
 	
 	private int stopped = 0, moveLeft = 1, moveRight = 2; 
 	
-	private boolean facingRight = false, facingLeft = false;
+	private boolean facingRight = false, facingLeft = false, moving = false;
 
 	protected boolean grounded = false, attacking = false;
 	
@@ -38,30 +38,35 @@ public class Entity {
 	}
 	
 	public void move(int direction) {
+		moving = false;
 		if(direction == moveLeft) {
 			if(grounded && attacking) {
 				facingLeft = true;
 				facingRight = false;
+				moving = false;
 			} else {
 				x -= movementSpeed;
 				facingLeft = true;
 				facingRight = false;
+				moving = true;
 			}
 		} else if(direction == moveRight) {
 			if(grounded && attacking) {
 				facingLeft = false;
 				facingRight = true;
+				moving = false;
 			} else {
 				x += movementSpeed;
 				facingLeft = false;
 				facingRight = true;
+				moving = true;
 			}
 		}
 	}
 	
 	public void jump(float delta) {
 		if(grounded) {
-			y += jumpHeight;
+			y += jumpHeight * delta;
 			hitBox.y = y;
 			hitBox.x = x;
 			grounded = false;
@@ -71,9 +76,16 @@ public class Entity {
 	public void applyGravity(float delta) {
 		if(grounded && jumpHeight < 10) {
 			jumpHeight = 10;
+			gravity = 0.4f;
+			gravity = gravity * delta;
 		} else if(!grounded) {
+			
+			gravity = 0.4f;
+			gravity = gravity * delta;
+			
 			jumpHeight -= gravity;
-			y += jumpHeight;
+			
+			y += jumpHeight * delta;
 			if(y < 50) {
 				y = 50;
 				grounded = true;
@@ -274,6 +286,10 @@ public class Entity {
 
 	public void setHitBox(Rectangle hitBox) {
 		this.hitBox = hitBox;
+	}
+	
+	public boolean getIsMoving() {
+		return moving;
 	}
 
 }

@@ -1,8 +1,8 @@
 package com.khamekaze.inconceivablebulk.gamestate;
 
-import java.util.Random;
-
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
@@ -21,8 +21,11 @@ public class TestState {
 	private Enemy enemy, enemyTwo, enemyThree;
 	private Array<Entity> entities;
 	
-	private boolean cameraShake = false, enemyKilled = false;
+	private boolean cameraShake = false, enemyKilled = false, slowMotion = false;
 	private float cameraShakeDuration = 0.0f;
+	
+	private Sprite bg;
+	private Texture texture;
 	
 	
 	public TestState() {
@@ -39,7 +42,9 @@ public class TestState {
 		entities.add(enemyThree);
 		
 		renderer = new ShapeRenderer();
-		
+		texture = new Texture("testbg.png");
+		bg = new Sprite(texture);
+		bg.setPosition(0, 0);
 		
 	}
 	
@@ -49,26 +54,15 @@ public class TestState {
 			e.update(delta);
 		}
 		
+		if(player.getIsMoving()) {
+			bg.translateX(player.getMovementSpeed());
+		}
+		
 		checkCollisions();
 	}
 	
 	public void render(SpriteBatch sb) {
-		renderer.setProjectionMatrix(ScreenManager.getCurrentScreen().camera.combined);
-		renderer.begin(ShapeType.Line);
-		
-		renderer.setColor(Color.BLACK);
-		renderer.rect(player.getHitBox().x, player.getHitBox().y, player.getHitBox().width, player.getHitBox().height);
-		
-		for(Entity e : entities) {
-			if(e.getHp() > 0)
-				renderer.rect(e.getHitBox().x, e.getHitBox().y, e.getHitBox().width, e.getHitBox().height);
-		}
-		
-		if(player.isAttacking()) {
-			renderer.setColor(Color.RED);
-			renderer.rect(player.getAttackHitbox().x, player.getAttackHitbox().y, player.getAttackHitbox().width, player.getAttackHitbox().height);
-		}
-		renderer.end();
+		bg.draw(sb);
 	}
 	
 	public void checkCollisions() {
@@ -131,6 +125,10 @@ public class TestState {
 	
 	public Player getPlayer() {
 		return player;
+	}
+	
+	public Array<Entity> getEntities() {
+		return entities;
 	}
 
 }

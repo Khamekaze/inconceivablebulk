@@ -4,8 +4,12 @@ import java.util.Random;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.khamekaze.inconceivablebulk.MainGame;
+import com.khamekaze.inconceivablebulk.entity.Entity;
 import com.khamekaze.inconceivablebulk.gamestate.TestState;
 
 public class TestScreen extends Screen {
@@ -14,6 +18,9 @@ public class TestScreen extends Screen {
 	private Random cameraShaker;
 	private boolean zoomed = false;
 	private float zoomLength = 6.0f;
+	private float speed = 1.0f, slowMotionTime = 6.0f;
+	private boolean slowMotion = false;
+	private ShapeRenderer renderer;
 
 	@Override
 	public void create() {
@@ -23,6 +30,7 @@ public class TestScreen extends Screen {
 		cameraShaker = new Random();
 		camera.update();
 		System.out.println(camera.zoom);
+		renderer = new ShapeRenderer();
 	}
 
 	@Override
@@ -38,8 +46,11 @@ public class TestScreen extends Screen {
 		if(test.getEnemyKilled()) {
 			zoomCamera();
 		}
+		
+		slowMotion();
+		
 		camera.update();
-		test.update(Gdx.graphics.getDeltaTime());
+		test.update(speed);
 	}
 
 	@Override
@@ -48,6 +59,23 @@ public class TestScreen extends Screen {
 		sb.begin();
 		test.render(sb);
 		sb.end();
+		renderer.setProjectionMatrix(ScreenManager.getCurrentScreen().camera.combined);
+		renderer.begin(ShapeType.Line);
+		
+		renderer.setColor(Color.BLACK);
+		renderer.rect(test.getPlayer().getHitBox().x, test.getPlayer().getHitBox().y, test.getPlayer().getHitBox().width, test.getPlayer().getHitBox().height);
+		
+		for(Entity e : test.getEntities()) {
+			if(e.getHp() > 0)
+				renderer.rect(e.getHitBox().x, e.getHitBox().y, e.getHitBox().width, e.getHitBox().height);
+		}
+		
+		if(test.getPlayer().isAttacking()) {
+			renderer.setColor(Color.RED);
+			renderer.rect(test.getPlayer().getAttackHitbox().x, test.getPlayer().getAttackHitbox().y, test.getPlayer().getAttackHitbox().width, test.getPlayer().getAttackHitbox().height);
+		}
+		renderer.end();
+		
 	}
 
 	@Override
@@ -65,17 +93,18 @@ public class TestScreen extends Screen {
 	
 	public void zoomCamera() {
 		if(!zoomed && camera.zoom > 0.6f) {
-			camera.position.set(test.getPlayer().getX() + 25, MainGame.HEIGHT / 2 + test.getPlayer().getY() + 190 * camera.zoom - camera.viewportHeight / 2, 0);
+			slowMotion = true;
+			camera.position.set(test.getPlayer().getX() + 25, 240 * camera.zoom, 0);
 			camera.zoom -= 0.08f;
 			if(camera.zoom <= 0.6f) {
 				camera.zoom = 0.6f;
-				camera.position.set(test.getPlayer().getX() + 25, MainGame.HEIGHT / 2 + test.getPlayer().getY() + 190 * camera.zoom - camera.viewportHeight / 2, 0);
+				camera.position.set(test.getPlayer().getX() + 25, 240 * camera.zoom, 0);
 				zoomed = true;
 			}
 		}
 		
 		if(zoomed) {
-			camera.position.set(test.getPlayer().getX() + 25, MainGame.HEIGHT / 2 + test.getPlayer().getY() + 190 * camera.zoom - camera.viewportHeight / 2, 0);
+			camera.position.set(test.getPlayer().getX() + 25, 240 * camera.zoom, 0);
 			if(zoomLength > 0) {
 				zoomLength -= 0.1f;
 				if(zoomLength < 0)
@@ -83,7 +112,7 @@ public class TestScreen extends Screen {
 			}
 			if(zoomLength == 0) {
 				camera.zoom += 0.08f;
-				
+				camera.position.set(test.getPlayer().getX() + 25, 240 * camera.zoom, 0);
 				if(camera.zoom >= 1) {
 					camera.zoom = 1;
 					zoomLength = 6;
@@ -91,6 +120,30 @@ public class TestScreen extends Screen {
 					test.setEnemyKilled(false);
 				}
 			}
+		}
+	}
+	
+	public void slowMotion() {
+		
+		if(Gdx.input.isKeyJustPressed(Input.Keys.Q)) {
+			if(slowMotion)
+				slowMotion = false;
+			else if(!slowMotion)
+				slowMotion = true;
+			
+			System.out.println(slowMotion);
+		}
+		
+		if(slowMotion) {
+			slowMotionTime -= 0.1f;
+			speed = 0.1f;
+			if(slowMotionTime <= 0) {
+				slowMotionTime = 0;
+				slowMotion = false;
+			}
+		} else if(!slowMotion) {
+			speed = 1.0f;
+			slowMotionTime = 6.0f;
 		}
 	}
 

@@ -37,7 +37,7 @@ public class Player extends Entity {
 		applyGravity(delta);
 		handleInput(delta);
 		if(groundPound) {
-			specialAttack();
+			specialAttack(delta);
 			if(grounded) {
 				groundPound = false;
 				setIsAttacking(false);
@@ -51,9 +51,9 @@ public class Player extends Entity {
 		}
 		
 		if(Gdx.input.isKeyPressed(Input.Keys.A)) {
-			move(getMoveLeft());
+			move(getMoveLeft(), delta);
 		} else if(Gdx.input.isKeyPressed(Input.Keys.D)) {
-			move(getMoveRight());
+			move(getMoveRight(), delta);
 		}
 		
 		if(Gdx.input.justTouched()) {
@@ -96,12 +96,12 @@ public class Player extends Entity {
 		}
 	}
 	
-	public void specialAttack() {
+	public void specialAttack(float speed) {
 		if(!isAttacking()) {
 			setIsAttacking(true);
 		}
 		
-		setY(getY() - 35);
+		setY(getY() - 35 * speed);
 		getAttackHitbox().set(getX(), getY() - 25, getHitBox().width, 2);
 		if(getAttackHitbox().getY() < 50) {
 			getAttackHitbox().set(getX(), 50, getHitBox().width, 2);
@@ -120,15 +120,14 @@ public class Player extends Entity {
 		}
 	}
 	
-	@Override
-	public void move(int direction) {
+	public void move(int direction, float speed) {
 		if(direction == getMoveLeft()) {
 			if(grounded && attacking) {
 				setFacingLeft(true);
 				setFacingRight(false);
 			} else {
 				if(!groundPound) {
-					x -= getMovementSpeed();
+					x -= getMovementSpeed() * speed;
 					setFacingLeft(true);
 					setFacingRight(false);
 				}
@@ -139,7 +138,7 @@ public class Player extends Entity {
 				setFacingRight(true);
 			} else {
 				if(!groundPound) {
-					x += getMovementSpeed();
+					x += getMovementSpeed() * speed;
 					setFacingLeft(false);
 					setFacingRight(true);
 				}
