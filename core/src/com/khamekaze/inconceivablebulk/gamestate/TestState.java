@@ -1,5 +1,7 @@
 package com.khamekaze.inconceivablebulk.gamestate;
 
+import java.util.Random;
+
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -19,6 +21,10 @@ public class TestState {
 	private Enemy enemy, enemyTwo, enemyThree;
 	private Array<Entity> entities;
 	
+	private boolean cameraShake = false, enemyKilled = false;
+	private float cameraShakeDuration = 0.0f;
+	
+	
 	public TestState() {
 		player = new Player(10, 2, 0, 6);
 		
@@ -33,6 +39,8 @@ public class TestState {
 		entities.add(enemyThree);
 		
 		renderer = new ShapeRenderer();
+		
+		
 	}
 	
 	public void update(float delta) {
@@ -65,23 +73,60 @@ public class TestState {
 	
 	public void checkCollisions() {
 		for(Entity e : entities) {
-			if(player.isAttacking()) {
-				if(e.checkCollision(player.getAttackHitbox())) {
-					e.takeDamage(player.getAttackDamage());
-					e.attacked(player.getHitBox());
+			if(e.getHp() > 0) {
+				if(player.isAttacking()) {
+					if(e.checkCollision(player.getAttackHitbox())) {
+						e.takeDamage(player.getAttackDamage());
+						e.attacked(player.getHitBox());
+						cameraShake = true;
+						cameraShakeDuration = 1f;
+					}
 				}
+
+				if(e.isAttacking())
+					player.checkCollision(e.getAttackHitbox());
+
+				if(e.getHp() <= 0) {
+					enemyKilled = true;
+				}
+
+				if(!player.isAttacking())
+					e.setDamageDelay(false);
 			}
-			
-			if(e.isAttacking())
-				player.checkCollision(e.getAttackHitbox());
-			
-			if(e.getHp() < 0) {
-				e = null;
-			}
-			
-			if(!player.isAttacking())
-				e.setDamageDelay(false);
 		}
+	}
+	
+	public boolean getCameraShakeBool() {
+		return cameraShake;
+	}
+	
+	public void setCameraShakeBool(boolean shake) {
+		cameraShake = shake;
+	}
+	
+	public float getCameraShakeDuration() {
+		return cameraShakeDuration;
+	}
+	
+	public void decreaseCameraShakeDuration() {
+		if(cameraShakeDuration > 0) {
+			cameraShakeDuration -= 0.1f;
+			if(cameraShakeDuration < 0) {
+				cameraShakeDuration = 0;
+			}
+		}
+		
+		if(cameraShakeDuration == 0) {
+			cameraShake = false;
+		}
+	}
+	
+	public boolean getEnemyKilled() {
+		return enemyKilled;
+	}
+	
+	public void setEnemyKilled(boolean killed) {
+		enemyKilled = killed;
 	}
 	
 	public Player getPlayer() {
