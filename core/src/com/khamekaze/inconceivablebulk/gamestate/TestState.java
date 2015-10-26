@@ -64,15 +64,16 @@ public class TestState {
 		combo.setX(ScreenManager.getCurrentScreen().camera.position.x + 100);
 		combo.update(delta);
 		
-		checkCollisions();
+		checkCollisions(delta);
 	}
 	
 	public void render(SpriteBatch sb) {
 		bg.draw(sb);
+		player.render(sb);
 		combo.render(sb);
 	}
 	
-	public void checkCollisions() {
+	public void checkCollisions(float speed) {
 		for(Entity e : entities) {
 			if(e.getHp() > 0) {
 				if(player.isAttacking()) {
@@ -80,7 +81,10 @@ public class TestState {
 						if(!e.getDamageDelay())
 							combo.setComboAmount(combo.getComboAmount() + 1);
 						e.takeDamage(player.getAttackDamage());
-						e.attacked(player.getHitBox());
+						if(!player.getGroundPound())
+							e.attacked(player.getHitBox(), speed);
+						else if(player.getGroundPound())
+							e.stompAttacked(player, speed);
 						cameraShake = true;
 						cameraShakeDuration = 1f;
 						combo.setComboShow(10);

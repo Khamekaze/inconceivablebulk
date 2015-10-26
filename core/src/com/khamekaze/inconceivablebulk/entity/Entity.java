@@ -1,6 +1,6 @@
 package com.khamekaze.inconceivablebulk.entity;
 
-import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.math.Rectangle;
 import com.khamekaze.inconceivablebulk.MainGame;
 
@@ -29,7 +29,7 @@ public class Entity {
 		this.attackDamage = attackDamage;
 		this.attackType = attackType;
 		this.movementSpeed = movementSpeed;
-		hitBox = new Rectangle(MainGame.WIDTH / 2, MainGame.HEIGHT / 2, 50, 50);
+		hitBox = new Rectangle(MainGame.WIDTH / 2, MainGame.HEIGHT / 2, 75, 75);
 		attackHitbox = new Rectangle(MainGame.WIDTH / 2, MainGame.HEIGHT / 2, 35, 10);
 	}
 	
@@ -96,11 +96,19 @@ public class Entity {
 		hitBox.y = y;
 	}
 	
-	public void attacked(Rectangle attacker) {
+	public void attacked(Rectangle attacker, float speed) {
 		if(attacker.getX() > x) {
-			x -= 1f;
+			x -= 1f * speed;
 		} else if(attacker.getX() < x) {
-			x += 1f;
+			x += 1f * speed;
+		}
+	}
+	
+	public void stompAttacked(Player attacker, float speed) {
+		if(attacker.getX() > x) {
+			x -= 10f * speed;
+		} else if(attacker.getX() < x) {
+			x += 10f * speed;
 		}
 	}
 	

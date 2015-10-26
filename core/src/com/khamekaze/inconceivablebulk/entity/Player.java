@@ -2,25 +2,47 @@ package com.khamekaze.inconceivablebulk.entity;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.khamekaze.inconceivablebulk.MainGame;
 
 public class Player extends Entity {
 	
 	private boolean groundPound = false;
+	
+	private Animation standingAnim, walkingAnim, attackingAnim, dyingAnim, jumpAnim, stompAnim;
+	private Texture walkSheet;
+	private TextureRegion[] walkFrames;
+	private TextureRegion currentFrame;
+	
+	private float elapsedTime = 0f;
 
 	public Player(int hp, int attackDamage, int attackType, int movementSpeed) {
 		super(hp, attackDamage, attackType, movementSpeed);
 		x = MainGame.WIDTH / 2;
 		y = MainGame.HEIGHT / 2;
+		walkFrames = new TextureRegion[11];
+		loadSprites();
+		walkingAnim = new Animation(1f/22f, walkFrames);
+		elapsedTime = 0f;
+	}
+	
+	public void loadSprites() {
+		for(int i = 0; i < 11; i++) {
+			TextureRegion sprite = new TextureRegion(new Texture(Gdx.files.internal("rawSprites/playerrun" + (i + 1) + ".png")));
+			walkFrames[i] = sprite;
+		}
 	}
 	
 	public void update(float delta, boolean slowmo) {
 //		System.out.println("X: " + x + " Y: " + y);
 		
 		if(isFacingLeft()) {
-			getAttackHitbox().setPosition(x - 15, y + 25);
+			getAttackHitbox().setPosition(x, y + 25);
 		} else if(isFacingRight()) {
-			getAttackHitbox().setPosition(x + 25, y + 25);
+			getAttackHitbox().setPosition(x + 40, y + 25);
 		}
 
 		if(isAttacking() && getAttackLength() > 0) {
@@ -34,6 +56,12 @@ public class Player extends Entity {
 			setAttackLength(1);
 		}
 		
+		if(slowmo) {
+			walkingAnim.setFrameDuration(1f/2.2f);
+		} else if(!slowmo) {
+			walkingAnim.setFrameDuration(1f/22f);
+		}
+		
 		handleInput(delta, slowmo);
 		
 		applyGravity(delta);
@@ -45,6 +73,18 @@ public class Player extends Entity {
 				setIsAttacking(false);
 			}
 		}
+	}
+	
+	public void render(SpriteBatch sb) {
+		elapsedTime += Gdx.graphics.getDeltaTime();
+		currentFrame = walkingAnim.getKeyFrame(elapsedTime, true);
+		if(isFacingLeft() && !currentFrame.isFlipX()) {
+			currentFrame.flip(true, false);
+		} else if(isFacingRight() && currentFrame.isFlipX()) {
+			currentFrame.flip(true, false);
+		}
+		
+		sb.draw(currentFrame, x, y);
 	}
 	
 	public void handleInput(float delta, boolean slowmo) {
@@ -69,11 +109,11 @@ public class Player extends Entity {
 		
 		if(grounded) {
 			if(isFacingLeft()) {
-				getAttackHitbox().setSize(40, 10);
-				getAttackHitbox().setPosition(x - 15, y + 25);
+				getAttackHitbox().setSize(35, 10);
+				getAttackHitbox().setPosition(x, y + 25);
 			} else if(isFacingRight()) {
-				getAttackHitbox().setSize(40, 10);
-				getAttackHitbox().setPosition(x + 25, y + 25);
+				getAttackHitbox().setSize(35, 10);
+				getAttackHitbox().setPosition(x + 40, y + 25);
 			}
 		}
 	}
@@ -151,5 +191,13 @@ public class Player extends Entity {
 				}
 			}
 		}
+	}
+	
+	public void setGroundPound(boolean groundpound) {
+		this.groundPound = groundpound;
+	}
+	
+	public boolean getGroundPound() {
+		return groundPound;
 	}
 }
