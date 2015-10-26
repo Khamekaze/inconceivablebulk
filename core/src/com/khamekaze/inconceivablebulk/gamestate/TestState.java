@@ -1,13 +1,12 @@
 package com.khamekaze.inconceivablebulk.gamestate;
 
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.utils.Array;
 import com.khamekaze.inconceivablebulk.MainGame;
+import com.khamekaze.inconceivablebulk.combo.Combo;
 import com.khamekaze.inconceivablebulk.entity.Enemy;
 import com.khamekaze.inconceivablebulk.entity.Entity;
 import com.khamekaze.inconceivablebulk.entity.Player;
@@ -16,6 +15,8 @@ import com.khamekaze.inconceivablebulk.screen.ScreenManager;
 public class TestState {
 	
 	private ShapeRenderer renderer;
+	
+	private Combo combo;
 	
 	private Player player;
 	private Enemy enemy, enemyTwo, enemyThree;
@@ -46,6 +47,8 @@ public class TestState {
 		bg = new Sprite(texture);
 		bg.setPosition(0, 0);
 		
+		combo = new Combo();
+		
 	}
 	
 	public void update(float delta, boolean slowmo) {
@@ -58,11 +61,15 @@ public class TestState {
 			bg.translateX(player.getMovementSpeed());
 		}
 		
+		combo.setX(ScreenManager.getCurrentScreen().camera.position.x + 100);
+		combo.update(delta);
+		
 		checkCollisions();
 	}
 	
 	public void render(SpriteBatch sb) {
 		bg.draw(sb);
+		combo.render(sb);
 	}
 	
 	public void checkCollisions() {
@@ -70,10 +77,14 @@ public class TestState {
 			if(e.getHp() > 0) {
 				if(player.isAttacking()) {
 					if(e.checkCollision(player.getAttackHitbox())) {
+						if(!e.getDamageDelay())
+							combo.setComboAmount(combo.getComboAmount() + 1);
 						e.takeDamage(player.getAttackDamage());
 						e.attacked(player.getHitBox());
 						cameraShake = true;
 						cameraShakeDuration = 1f;
+						combo.setComboShow(10);
+						
 					}
 				}
 

@@ -53,7 +53,12 @@ public class Player extends Entity {
 		}
 		
 		if(Gdx.input.isKeyPressed(Input.Keys.A)) {
-			move(getMoveLeft(), delta);
+			if(x > 0) {
+				move(getMoveLeft(), delta);
+				if(x <= 0) {
+					x = 0;
+				}
+			}
 		} else if(Gdx.input.isKeyPressed(Input.Keys.D)) {
 			move(getMoveRight(), delta);
 		}
