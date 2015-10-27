@@ -3,6 +3,7 @@ package com.khamekaze.inconceivablebulk.entity;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -21,7 +22,7 @@ public class Player extends Entity {
 
 	public Player(int hp, int attackDamage, int attackType, int movementSpeed) {
 		super(hp, attackDamage, attackType, movementSpeed);
-		x = MainGame.WIDTH / 2;
+		x = MainGame.WIDTH / 2 - 50;
 		y = MainGame.HEIGHT / 2;
 		walkFrames = new TextureRegion[11];
 		loadSprites();
@@ -31,18 +32,19 @@ public class Player extends Entity {
 	
 	public void loadSprites() {
 		for(int i = 0; i < 11; i++) {
-			TextureRegion sprite = new TextureRegion(new Texture(Gdx.files.internal("rawSprites/playerrun" + (i + 1) + ".png")));
+			Texture texture = new Texture(Gdx.files.internal("rawSprites/playerrun" + (i + 1) + ".png"));
+			texture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
+			TextureRegion sprite = new TextureRegion(texture);
 			walkFrames[i] = sprite;
 		}
 	}
 	
 	public void update(float delta, boolean slowmo) {
-//		System.out.println("X: " + x + " Y: " + y);
 		
 		if(isFacingLeft()) {
 			getAttackHitbox().setPosition(x, y + 25);
 		} else if(isFacingRight()) {
-			getAttackHitbox().setPosition(x + 40, y + 25);
+			getAttackHitbox().setPosition(x + 50, y + 25);
 		}
 
 		if(isAttacking() && getAttackLength() > 0) {
@@ -109,11 +111,11 @@ public class Player extends Entity {
 		
 		if(grounded) {
 			if(isFacingLeft()) {
-				getAttackHitbox().setSize(35, 10);
+				getAttackHitbox().setSize(50, 20);
 				getAttackHitbox().setPosition(x, y + 25);
 			} else if(isFacingRight()) {
-				getAttackHitbox().setSize(35, 10);
-				getAttackHitbox().setPosition(x + 40, y + 25);
+				getAttackHitbox().setSize(50, 20);
+				getAttackHitbox().setPosition(x + 50, y + 25);
 			}
 		}
 	}
@@ -158,11 +160,11 @@ public class Player extends Entity {
 			setAttackLength(0);
 			grounded = true;
 			if(isFacingLeft()) {
-				getAttackHitbox().setSize(40, 10);
-				getAttackHitbox().setPosition(x - 15, y + 25);
+				getAttackHitbox().setSize(50, 20);
+				getAttackHitbox().setPosition(x, y + 25);
 			} else if(isFacingRight()) {
-				getAttackHitbox().setSize(40, 10);
-				getAttackHitbox().setPosition(x + 25, y + 25);
+				getAttackHitbox().setSize(50, 20);
+				getAttackHitbox().setPosition(x + 50, y + 25);
 			}
 		}
 	}

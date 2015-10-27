@@ -38,7 +38,7 @@ public class TestScreen extends Screen {
 		if(test.getCameraShakeBool() && !test.getEnemyKilled()) {
 			cameraShakeExecute();
 		} else if(!test.getEnemyKilled()) {
-			camera.position.set(test.getPlayer().getX() + 25, camera.viewportHeight/2, 0);
+			camera.position.set(test.getPlayer().getX() + 50, camera.viewportHeight/2, 0);
 		} 
 		
 		
@@ -86,7 +86,7 @@ public class TestScreen extends Screen {
 	public void cameraShakeExecute() {
 		if(test.getCameraShakeBool() && test.getCameraShakeDuration() > 0) {
 			int xShake = cameraShaker.nextInt(4) - 2;
-			camera.position.set(test.getPlayer().getX() + xShake + 25, camera.viewportHeight / 2, 0);
+			camera.position.set(test.getPlayer().getX() + xShake + 50, camera.viewportHeight / 2, 0);
 			test.decreaseCameraShakeDuration();
 		}
 	}
@@ -94,17 +94,17 @@ public class TestScreen extends Screen {
 	public void zoomCamera() {
 		if(!zoomed && camera.zoom > 0.6f) {
 			slowMotion = true;
-			camera.position.set(test.getPlayer().getX() + 25, 240 * camera.zoom, 0);
+			camera.position.set(test.getPlayer().getX() + 50, 240 * camera.zoom, 0);
 			camera.zoom -= 0.08f;
 			if(camera.zoom <= 0.6f) {
 				camera.zoom = 0.6f;
-				camera.position.set(test.getPlayer().getX() + 25, 240 * camera.zoom, 0);
+				camera.position.set(test.getPlayer().getX() + 50, 240 * camera.zoom, 0);
 				zoomed = true;
 			}
 		}
 		
 		if(zoomed) {
-			camera.position.set(test.getPlayer().getX() + 25, 240 * camera.zoom, 0);
+			camera.position.set(test.getPlayer().getX() + 50, 240 * camera.zoom, 0);
 			if(zoomLength > 0) {
 				zoomLength -= 0.1f;
 				if(zoomLength < 0)
@@ -112,7 +112,7 @@ public class TestScreen extends Screen {
 			}
 			if(zoomLength == 0) {
 				camera.zoom += 0.08f;
-				camera.position.set(test.getPlayer().getX() + 25, 240 * camera.zoom, 0);
+				camera.position.set(test.getPlayer().getX() + 50, 240 * camera.zoom, 0);
 				if(camera.zoom >= 1) {
 					camera.zoom = 1;
 					zoomLength = 6;

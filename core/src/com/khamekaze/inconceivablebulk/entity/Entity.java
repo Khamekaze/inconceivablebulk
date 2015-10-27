@@ -29,12 +29,12 @@ public class Entity {
 		this.attackDamage = attackDamage;
 		this.attackType = attackType;
 		this.movementSpeed = movementSpeed;
-		hitBox = new Rectangle(MainGame.WIDTH / 2, MainGame.HEIGHT / 2, 75, 75);
-		attackHitbox = new Rectangle(MainGame.WIDTH / 2, MainGame.HEIGHT / 2, 35, 10);
+		hitBox = new Rectangle(MainGame.WIDTH / 2, MainGame.HEIGHT / 2, 100, 100);
+		attackHitbox = new Rectangle(MainGame.WIDTH / 2, MainGame.HEIGHT / 2, 50, 20);
 	}
 	
 	public void update(float delta) {
-		
+
 	}
 	
 	public void move(int direction) {
