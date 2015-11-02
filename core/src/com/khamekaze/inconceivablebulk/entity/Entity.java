@@ -12,7 +12,8 @@ public class Entity {
 
 	protected boolean grounded = false, attacking = false;
 	
-	private int hp, maxHp, attackDamage, attackType, movementSpeed;
+	private int hp, maxHp, attackDamage, attackType;
+	private float movementSpeed;
 	private float gravity = 0.4f, attackLength = 1;
 	
 	private boolean damageDelay = false;
@@ -23,7 +24,7 @@ public class Entity {
 	
 	private Rectangle hitBox, attackHitbox;
 	
-	public Entity(int hp, int attackDamage, int attackType, int movementSpeed) {
+	public Entity(int hp, int attackDamage, int attackType, float movementSpeed) {
 		this.hp = hp;
 		maxHp = hp;
 		this.attackDamage = attackDamage;
@@ -34,10 +35,10 @@ public class Entity {
 	}
 	
 	public void update(float delta) {
-
+		applyGravity(delta);
 	}
 	
-	public void move(int direction) {
+	public void move(int direction, float delta) {
 		moving = false;
 		if(direction == moveLeft) {
 			if(grounded && attacking) {
@@ -45,7 +46,7 @@ public class Entity {
 				facingRight = false;
 				moving = false;
 			} else {
-				x -= movementSpeed;
+				x -= movementSpeed * delta;
 				facingLeft = true;
 				facingRight = false;
 				moving = true;
@@ -56,7 +57,7 @@ public class Entity {
 				facingRight = true;
 				moving = false;
 			} else {
-				x += movementSpeed;
+				x += movementSpeed * delta;
 				facingLeft = false;
 				facingRight = true;
 				moving = true;
@@ -74,12 +75,13 @@ public class Entity {
 	}
 	
 	public void applyGravity(float delta) {
+		if(y > 50)
+			grounded = false;
 		if(grounded && jumpHeight < 10) {
 			jumpHeight = 10;
 			gravity = 0.4f;
 			gravity = gravity * delta;
 		} else if(!grounded) {
-			
 			gravity = 0.4f;
 			gravity = gravity * delta;
 			
@@ -248,11 +250,11 @@ public class Entity {
 		this.attackType = attackType;
 	}
 
-	public int getMovementSpeed() {
+	public float getMovementSpeed() {
 		return movementSpeed;
 	}
 
-	public void setMovementSpeed(int movementSpeed) {
+	public void setMovementSpeed(float movementSpeed) {
 		this.movementSpeed = movementSpeed;
 	}
 
@@ -270,6 +272,7 @@ public class Entity {
 
 	public void setX(float x) {
 		this.x = x;
+		hitBox.x = this.x;
 	}
 
 	public float getY() {
@@ -278,6 +281,7 @@ public class Entity {
 
 	public void setY(float y) {
 		this.y = y;
+		hitBox.y = this.y;
 	}
 
 	public float getJumpHeight() {

@@ -54,7 +54,7 @@ public class Combo {
 			comboNumbers.get(9).setX(comboSprite.getX() + comboSprite.getWidth() + 5 + 30);
 			comboNumbers.get(9).setY(y);
 			comboNumbers.get(9).draw(sb);
-		} else if(comboAmount > 10) {
+		} else if(comboAmount > 10 && comboAmount < 20) {
 			int secondNumber = comboAmount % 10;
 			int firstNumber = comboAmount / 10;
 			comboNumbers.get(firstNumber - 1).setX(comboSprite.getX() + comboSprite.getWidth() + 5);
@@ -63,6 +63,45 @@ public class Combo {
 			comboNumbers.get(secondNumber - 1).setX(comboSprite.getX() + comboSprite.getWidth() + 5 + 30);
 			comboNumbers.get(secondNumber - 1).setY(y);
 			comboNumbers.get(secondNumber - 1).draw(sb);
+		} else if(comboAmount == 20) {
+			comboNumbers.get(1).setX(comboSprite.getX() + comboSprite.getWidth() + 5);
+			comboNumbers.get(1).setY(y);
+			comboNumbers.get(1).draw(sb);
+			comboNumbers.get(9).setX(comboSprite.getX() + comboSprite.getWidth() + 5 + 30);
+			comboNumbers.get(9).setY(y);
+			comboNumbers.get(9).draw(sb);
+		} else if(comboAmount > 20 && comboAmount < 30) {
+			int secondNumber = comboAmount % 10;
+			int firstNumber = comboAmount / 10;
+			comboNumbers.get(firstNumber - 1).setX(comboSprite.getX() + comboSprite.getWidth() + 5);
+			comboNumbers.get(firstNumber - 1).setY(y);
+			comboNumbers.get(firstNumber - 1).draw(sb);
+			comboNumbers.get(secondNumber - 1).setX(comboSprite.getX() + comboSprite.getWidth() + 5 + 30);
+			comboNumbers.get(secondNumber - 1).setY(y);
+			comboNumbers.get(secondNumber - 1).draw(sb);
+		} else if(comboAmount == 30) {
+			comboNumbers.get(2).setX(comboSprite.getX() + comboSprite.getWidth() + 5);
+			comboNumbers.get(2).setY(y);
+			comboNumbers.get(2).draw(sb);
+			comboNumbers.get(9).setX(comboSprite.getX() + comboSprite.getWidth() + 5 + 30);
+			comboNumbers.get(9).setY(y);
+			comboNumbers.get(9).draw(sb);
+		} else if(comboAmount > 30 && comboAmount < 40) {
+			int secondNumber = comboAmount % 10;
+			int firstNumber = comboAmount / 10;
+			comboNumbers.get(firstNumber - 1).setX(comboSprite.getX() + comboSprite.getWidth() + 5);
+			comboNumbers.get(firstNumber - 1).setY(y);
+			comboNumbers.get(firstNumber - 1).draw(sb);
+			comboNumbers.get(secondNumber - 1).setX(comboSprite.getX() + comboSprite.getWidth() + 5 + 30);
+			comboNumbers.get(secondNumber - 1).setY(y);
+			comboNumbers.get(secondNumber - 1).draw(sb);
+		} else if(comboAmount == 40) {
+			comboNumbers.get(3).setX(comboSprite.getX() + comboSprite.getWidth() + 5);
+			comboNumbers.get(3).setY(y);
+			comboNumbers.get(3).draw(sb);
+			comboNumbers.get(9).setX(comboSprite.getX() + comboSprite.getWidth() + 5 + 30);
+			comboNumbers.get(9).setY(y);
+			comboNumbers.get(9).draw(sb);
 		}
 	}
 	

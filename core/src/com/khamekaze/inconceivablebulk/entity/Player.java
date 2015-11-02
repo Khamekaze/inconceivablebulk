@@ -5,22 +5,26 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.Animation.PlayMode;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.khamekaze.inconceivablebulk.MainGame;
 
 public class Player extends Entity {
 	
-	private boolean groundPound = false;
+	private boolean groundPound = false, pwoAttack = false;
 	
 	private Animation standingAnim, walkingAnim, attackingAnim, dyingAnim, jumpAnim, stompAnim;
 	private Texture walkSheet;
 	private TextureRegion[] walkFrames;
 	private TextureRegion currentFrame;
 	
+	private Sprite streak;
+	
 	private float elapsedTime = 0f;
 
-	public Player(int hp, int attackDamage, int attackType, int movementSpeed) {
+	public Player(int hp, int attackDamage, int attackType, float movementSpeed) {
 		super(hp, attackDamage, attackType, movementSpeed);
 		x = MainGame.WIDTH / 2 - 50;
 		y = MainGame.HEIGHT / 2;
@@ -37,9 +41,53 @@ public class Player extends Entity {
 			TextureRegion sprite = new TextureRegion(texture);
 			walkFrames[i] = sprite;
 		}
+		
+		streak = new Sprite(new Texture(Gdx.files.internal("rawSprites/streak.png")));
+		
 	}
 	
 	public void update(float delta, boolean slowmo) {
+		
+		if(Gdx.input.isKeyJustPressed(Input.Keys.P)) {
+			if(pwoAttack)
+				pwoAttack = false;
+			else if(!pwoAttack)
+				pwoAttack = true;
+		}
+		
+		if(!pwoAttack) {
+			handleInput(delta, slowmo);
+			applyGravity(delta);
+		}
+		
+		if(groundPound) {
+			specialAttack(delta);
+			if(grounded) {
+				groundPound = false;
+				setIsAttacking(false);
+			}
+		}
+	}
+	
+	public void render(SpriteBatch sb) {
+		elapsedTime += Gdx.graphics.getDeltaTime();
+		currentFrame = walkingAnim.getKeyFrame(elapsedTime, true);
+		
+		if(isFacingLeft() && !currentFrame.isFlipX()) {
+			currentFrame.flip(true, false);
+		} else if(isFacingRight() && currentFrame.isFlipX()) {
+			currentFrame.flip(true, false);
+		}
+		
+		sb.draw(currentFrame, x, y);
+		
+		if(pwoAttack) {
+			streak.draw(sb);
+			streak.setAlpha(0);
+		}
+	}
+	
+	public void handleInput(float delta, boolean slowmo) {
 		
 		if(isFacingLeft()) {
 			getAttackHitbox().setPosition(x, y + 25);
@@ -64,32 +112,6 @@ public class Player extends Entity {
 			walkingAnim.setFrameDuration(1f/22f);
 		}
 		
-		handleInput(delta, slowmo);
-		
-		applyGravity(delta);
-		
-		if(groundPound) {
-			specialAttack(delta);
-			if(grounded) {
-				groundPound = false;
-				setIsAttacking(false);
-			}
-		}
-	}
-	
-	public void render(SpriteBatch sb) {
-		elapsedTime += Gdx.graphics.getDeltaTime();
-		currentFrame = walkingAnim.getKeyFrame(elapsedTime, true);
-		if(isFacingLeft() && !currentFrame.isFlipX()) {
-			currentFrame.flip(true, false);
-		} else if(isFacingRight() && currentFrame.isFlipX()) {
-			currentFrame.flip(true, false);
-		}
-		
-		sb.draw(currentFrame, x, y);
-	}
-	
-	public void handleInput(float delta, boolean slowmo) {
 		if(Gdx.input.isKeyJustPressed(Input.Keys.SPACE) && isGrounded()) {
 			jump(delta);
 		}
@@ -201,5 +223,17 @@ public class Player extends Entity {
 	
 	public boolean getGroundPound() {
 		return groundPound;
+	}
+	
+	public void setPwoAttack(boolean attack) {
+		this.pwoAttack = attack;
+	}
+	
+	public boolean isPwoAttack() {
+		return pwoAttack;
+	}
+	
+	public Sprite getStreakSprite() {
+		return streak;
 	}
 }

@@ -24,7 +24,7 @@ public class InputManager implements InputProcessor {
 	}
 	
 	public boolean getIntersecting(Rectangle rect) {
-		return mouseHitbox.overlaps(rect);
+		return mouseHitbox.overlaps(rect) || mouseHitbox.contains(rect);
 	}
 	
 	public Rectangle getMouseHitbox() {
