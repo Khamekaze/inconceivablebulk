@@ -68,10 +68,6 @@ public class TestState {
 			e.update(delta, player.getHitBox());
 		}
 		
-		if(player.getIsMoving()) {
-			bg.translateX(player.getMovementSpeed());
-		}
-		
 		combo.setX(ScreenManager.getCurrentScreen().camera.position.x + 50);
 		combo.setY(ScreenManager.getCurrentScreen().camera.position.y + 150);
 		combo.update(delta);

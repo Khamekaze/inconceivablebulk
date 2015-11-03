@@ -1,11 +1,12 @@
 package com.khamekaze.inconceivablebulk.entity;
 
+import java.util.Random;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.g2d.Animation;
-import com.badlogic.gdx.graphics.g2d.Animation.PlayMode;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -15,39 +16,74 @@ public class Player extends Entity {
 	
 	private boolean groundPound = false, pwoAttack = false;
 	
-	private Animation standingAnim, walkingAnim, attackingAnim, dyingAnim, jumpAnim, stompAnim;
-	private Texture walkSheet;
-	private TextureRegion[] walkFrames;
+	private Animation standingAnim, walkingAnim, attackingAnimOne, attackingAnimTwo, dyingAnim, jumpAnim, stompAnim;
+	private TextureRegion[] walkFrames, stanceFrames, attackOneFrames, attackTwoFrames, jumpFrames;
 	private TextureRegion currentFrame;
-	
 	private Sprite streak;
 	
-	private float elapsedTime = 0f;
+	private Random attackSelector = new Random();
+	private int selectedAttack = 0;
+	
+	private float elapsedTime = 0f, attackFrame = 0.0f, jumpFrame = 0.0f;
 
 	public Player(int hp, int attackDamage, int attackType, float movementSpeed) {
 		super(hp, attackDamage, attackType, movementSpeed);
 		x = MainGame.WIDTH / 2 - 50;
 		y = MainGame.HEIGHT / 2;
 		walkFrames = new TextureRegion[11];
+		stanceFrames = new TextureRegion[19];
+		attackOneFrames = new TextureRegion[6];
+		attackTwoFrames = new TextureRegion[6];
+		jumpFrames = new TextureRegion[9];
 		loadSprites();
 		walkingAnim = new Animation(1f/22f, walkFrames);
+		standingAnim = new Animation(1f/22f, stanceFrames);
+		attackingAnimOne = new Animation(1f/22f, attackOneFrames);
+		attackingAnimTwo = new Animation(1f/22f, attackTwoFrames);
+		jumpAnim = new Animation(1f/22f, jumpFrames);
 		elapsedTime = 0f;
 	}
 	
 	public void loadSprites() {
 		for(int i = 0; i < 11; i++) {
-			Texture texture = new Texture(Gdx.files.internal("rawSprites/playerrun" + (i + 1) + ".png"));
+			Texture texture = new Texture(Gdx.files.internal("rawSprites/playerrun" + (i) + ".png"));
 			texture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
 			TextureRegion sprite = new TextureRegion(texture);
 			walkFrames[i] = sprite;
 		}
 		
-		streak = new Sprite(new Texture(Gdx.files.internal("rawSprites/streak.png")));
+		for(int i = 0; i < 19; i++) {
+			Texture texture = new Texture(Gdx.files.internal("rawSprites/player/stance/playerstance" + (i) + ".png"));
+			texture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
+			TextureRegion sprite = new TextureRegion(texture);
+			stanceFrames[i] = sprite;
+		}
 		
+		for(int i = 0; i < 6; i++) {
+			Texture texture = new Texture(Gdx.files.internal("rawSprites/player/attack/attackOne/playerattack" + (i) + ".png"));
+			texture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
+			TextureRegion sprite = new TextureRegion(texture);
+			attackOneFrames[i] = sprite;
+		}
+		
+		for(int i = 0; i < 6; i++) {
+			Texture texture = new Texture(Gdx.files.internal("rawSprites/player/attack/attackTwo/playerattack" + (i) + ".png"));
+			texture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
+			TextureRegion sprite = new TextureRegion(texture);
+			attackTwoFrames[i] = sprite;
+		}
+		
+		for(int i = 0; i < 9; i++) {
+			Texture texture = new Texture(Gdx.files.internal("rawSprites/player/jump/playerjump" + (i) + ".png"));
+			texture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
+			TextureRegion sprite = new TextureRegion(texture);
+			jumpFrames[i] = sprite;
+		}
+		
+		streak = new Sprite(new Texture(Gdx.files.internal("rawSprites/streak.png")));
 	}
 	
 	public void update(float delta, boolean slowmo) {
-		
 		if(Gdx.input.isKeyJustPressed(Input.Keys.P)) {
 			if(pwoAttack)
 				pwoAttack = false;
@@ -71,7 +107,31 @@ public class Player extends Entity {
 	
 	public void render(SpriteBatch sb) {
 		elapsedTime += Gdx.graphics.getDeltaTime();
-		currentFrame = walkingAnim.getKeyFrame(elapsedTime, true);
+		
+		if(!getIsMoving()) {
+			currentFrame = standingAnim.getKeyFrame(elapsedTime, true);
+		} else if(getIsMoving() && isGrounded()) {
+			currentFrame = walkingAnim.getKeyFrame(elapsedTime, true);
+		} else if(!isGrounded() && !isAttacking()) {
+			jumpFrame += Gdx.graphics.getDeltaTime();
+			currentFrame = jumpAnim.getKeyFrame(jumpFrame, false);
+		}
+		
+		if(isAttacking() && isGrounded()) {
+			attackFrame += Gdx.graphics.getDeltaTime();
+			if(selectedAttack == 0)
+				currentFrame = attackingAnimOne.getKeyFrame(attackFrame, false);
+			else if(selectedAttack == 1)
+				currentFrame = attackingAnimTwo.getKeyFrame(attackFrame, false);
+		}
+		
+		if(!isAttacking() && attackFrame > 0) {
+			attackFrame = 0;
+		}
+		
+		if(jumpFrame > 0 && isGrounded()) {
+			jumpFrame = 0;
+		}
 		
 		if(isFacingLeft() && !currentFrame.isFlipX()) {
 			currentFrame.flip(true, false);
@@ -88,81 +148,73 @@ public class Player extends Entity {
 	}
 	
 	public void handleInput(float delta, boolean slowmo) {
-		
 		if(isFacingLeft()) {
-			getAttackHitbox().setPosition(x, y + 25);
+			getAttackHitbox().setPosition(x, y + 50);
 		} else if(isFacingRight()) {
-			getAttackHitbox().setPosition(x + 50, y + 25);
+			getAttackHitbox().setPosition(x + 50, y + 50);
 		}
 
 		if(isAttacking() && getAttackLength() > 0) {
-			setAttackLength(getAttackLength() - 0.1f);
+			setAttackLength(getAttackLength() - 0.1f * delta);
 			if(getAttackLength() < 0) {
 				setAttackLength(0);
 			}
-		} else if(isAttacking() && getAttackLength() == 0 && grounded) {
+		} else if(isAttacking() && getAttackLength() == 0 && isGrounded()) {
 			setIsAttacking(false);
-		} else if(!isAttacking() && getAttackLength() != 1 && grounded) {
+		} else if(!isAttacking() && getAttackLength() != 1 && isGrounded()) {
 			setAttackLength(1);
 		}
 		
 		if(slowmo) {
 			walkingAnim.setFrameDuration(1f/2.2f);
+			standingAnim.setFrameDuration(1f/2.2f);
+			attackingAnimOne.setFrameDuration(1f/2.2f);
+			jumpAnim.setFrameDuration(1f/2.2f);
 		} else if(!slowmo) {
 			walkingAnim.setFrameDuration(1f/22f);
+			standingAnim.setFrameDuration(1f/22f);
+			attackingAnimOne.setFrameDuration(1f/22f);
+			jumpAnim.setFrameDuration(1f/22f);
 		}
 		
 		if(Gdx.input.isKeyJustPressed(Input.Keys.SPACE) && isGrounded()) {
 			jump(delta);
 		}
 		
-		if(Gdx.input.isKeyPressed(Input.Keys.A)) {
-			if(x > 0) {
-				move(getMoveLeft(), delta);
-				if(x <= 0) {
-					x = 0;
-				}
-			}
-		} else if(Gdx.input.isKeyPressed(Input.Keys.D)) {
-			move(getMoveRight(), delta);
-		}
+		move(delta);
 		
 		if(Gdx.input.justTouched() && !slowmo) {
+			selectedAttack = attackSelector.nextInt(2);
 			attack();
 		}
 		
 		if(grounded) {
 			if(isFacingLeft()) {
 				getAttackHitbox().setSize(50, 20);
-				getAttackHitbox().setPosition(x, y + 25);
+				getAttackHitbox().setPosition(x, y + 50);
 			} else if(isFacingRight()) {
 				getAttackHitbox().setSize(50, 20);
-				getAttackHitbox().setPosition(x + 50, y + 25);
+				getAttackHitbox().setPosition(x + 50, y + 50);
 			}
 		}
 	}
 	
 	public void attack() {
-		if(grounded) {
-			setIsAttacking(true);
+		if(isGrounded()) {
 			if(isFacingLeft()) {
-				System.out.println("GROUND ATTACK LEFT");
+				setIsAttacking(true);
 			} else if(isFacingRight()) {
-				System.out.println("GROUND ATTACK RIGHT");
+				setIsAttacking(true);
 			}
-		} else if(!grounded) {
-			
+		} else if(!isGrounded() && !groundPound) {
 			if(Gdx.input.isKeyPressed(Input.Keys.S)) {
-				System.out.println("DOWNWARD ATTACK");
 				groundPound = true;
 			}
 			
 			if(isFacingLeft() && !Gdx.input.isKeyPressed(Input.Keys.S)) {
 				setIsAttacking(true);
-				System.out.println("AIR ATTACK LEFT");
 			} else if(isFacingRight() && !Gdx.input.isKeyPressed(Input.Keys.S)) {
 				setIsAttacking(true);
-				System.out.println("AIR ATTACK RIGHT");
 			}
 		}
 	}
@@ -183,37 +235,51 @@ public class Player extends Entity {
 			grounded = true;
 			if(isFacingLeft()) {
 				getAttackHitbox().setSize(50, 20);
-				getAttackHitbox().setPosition(x, y + 25);
+				getAttackHitbox().setPosition(x, y + 50);
 			} else if(isFacingRight()) {
 				getAttackHitbox().setSize(50, 20);
-				getAttackHitbox().setPosition(x + 50, y + 25);
+				getAttackHitbox().setPosition(x + 50, y + 50);
 			}
 		}
 	}
 	
-	public void move(int direction, float speed) {
-		if(direction == getMoveLeft()) {
-			if(grounded && attacking) {
+	public void move(float speed) {
+		if(Gdx.input.isKeyPressed(Input.Keys.A)) {
+			if(grounded && isAttacking()) {
 				setFacingLeft(true);
 				setFacingRight(false);
+				setIsMoving(false);
 			} else {
 				if(!groundPound) {
-					x -= getMovementSpeed() * speed;
-					setFacingLeft(true);
-					setFacingRight(false);
+					if(x > 0) {
+						x -= getMovementSpeed() * speed;
+						setIsMoving(true);
+						setFacingLeft(true);
+						setFacingRight(false);
+					} else if(x < 0) {
+						x = 0;
+					} else if(x == 0) {
+						setIsMoving(false);
+						setFacingLeft(true);
+						setFacingRight(false);
+					}
 				}
 			}
-		} else if(direction == getMoveRight()) {
-			if(grounded && attacking) {
+		} else if(Gdx.input.isKeyPressed(Input.Keys.D)) {
+			if(grounded && isAttacking()) {
 				setFacingLeft(false);
 				setFacingRight(true);
+				setIsMoving(false);
 			} else {
 				if(!groundPound) {
 					x += getMovementSpeed() * speed;
+					setIsMoving(true);
 					setFacingLeft(false);
 					setFacingRight(true);
 				}
 			}
+		} else {
+			setIsMoving(false);
 		}
 	}
 	

@@ -8,7 +8,7 @@ public class Entity {
 	
 	private int stopped = 0, moveLeft = 1, moveRight = 2; 
 	
-	private boolean facingRight = false, facingLeft = false, moving = false;
+	private boolean facingRight = true, facingLeft = false, moving = false;
 
 	protected boolean grounded = false, attacking = false;
 	
@@ -62,11 +62,15 @@ public class Entity {
 				facingRight = true;
 				moving = true;
 			}
+		} else if(direction == stopped) {
+			moving = false;
 		}
 	}
 	
 	public void jump(float delta) {
 		if(grounded) {
+			if(isAttacking())
+				setIsAttacking(false);
 			y += jumpHeight * delta;
 			hitBox.y = y;
 			hitBox.x = x;
@@ -92,6 +96,10 @@ public class Entity {
 				y = 50;
 				grounded = true;
 			}
+		}
+		
+		if(y == 50) {
+			grounded = true;
 		}
 		
 		hitBox.x = x;
@@ -302,6 +310,10 @@ public class Entity {
 	
 	public boolean getIsMoving() {
 		return moving;
+	}
+	
+	public void setIsMoving(boolean moving) {
+		this.moving = moving;
 	}
 
 }
