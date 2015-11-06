@@ -32,9 +32,7 @@ public class TestScreen extends Screen {
 		Gdx.input.setInputProcessor(inputManager);
 		cameraShaker = new Random();
 		camera.update();
-		System.out.println(camera.zoom);
 		renderer = new ShapeRenderer();
-		System.out.println(camera.position.y);
 	}
 
 	@Override
@@ -73,11 +71,10 @@ public class TestScreen extends Screen {
 		sb.begin();
 		test.render(sb);
 		sb.end();
-		renderer.setProjectionMatrix(ScreenManager.getCurrentScreen().camera.combined);
+		renderer.setProjectionMatrix(camera.combined);
 		renderer.begin(ShapeType.Line);
 		
 		renderer.setColor(Color.BLACK);
-//		renderer.rect(test.getPlayer().getHitBox().x, test.getPlayer().getHitBox().y, test.getPlayer().getHitBox().width, test.getPlayer().getHitBox().height);
 		
 		for(Entity e : test.getEntities()) {
 			if(e.getHp() > 0)
@@ -88,8 +85,6 @@ public class TestScreen extends Screen {
 			renderer.setColor(Color.RED);
 			renderer.rect(test.getPlayer().getAttackHitbox().x, test.getPlayer().getAttackHitbox().y, test.getPlayer().getAttackHitbox().width, test.getPlayer().getAttackHitbox().height);
 		}
-		
-//		renderer.line(test.getPlayerVect(), test.getPwoVect());
 		renderer.end();
 		
 	}
@@ -138,12 +133,12 @@ public class TestScreen extends Screen {
 	}
 	
 	public void zoomCamera() {
-		if(!zoomed && camera.zoom > 0.6f) {
+		if(!zoomed && camera.zoom > 0.7f) {
 			slowMotion = true;
 			camera.position.set(test.getPlayer().getX() + 50, 240 * camera.zoom, 0);
 			camera.zoom -= 0.08f;
-			if(camera.zoom <= 0.6f) {
-				camera.zoom = 0.6f;
+			if(camera.zoom <= 0.7f) {
+				camera.zoom = 0.7f;
 				camera.position.set(test.getPlayer().getX() + 50, 240 * camera.zoom, 0);
 				zoomed = true;
 			}
@@ -194,8 +189,6 @@ public class TestScreen extends Screen {
 				slowMotion = false;
 			else if(!slowMotion)
 				slowMotion = true;
-			
-			System.out.println(slowMotion);
 		}
 		
 		if(slowMotion) {

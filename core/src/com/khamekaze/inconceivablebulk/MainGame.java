@@ -9,7 +9,7 @@ import com.khamekaze.inconceivablebulk.screen.TestScreen;
 
 public class MainGame extends ApplicationAdapter {
 	
-	public static int WIDTH = 700, HEIGHT = 480;
+	public static int WIDTH = 700, HEIGHT = 420;
 	
 	SpriteBatch batch;
 	

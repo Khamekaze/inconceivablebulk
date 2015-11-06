@@ -2,6 +2,12 @@ package com.khamekaze.inconceivablebulk.entity;
 
 import java.util.Random;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.Texture.TextureFilter;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
@@ -15,6 +21,11 @@ public class Enemy extends Entity {
 	private float attackCd = 0.0f;
 	private boolean stunned = false;
 	private float stunTime = 0.0f;
+	private float hitFrameTime = 0.0f;
+	
+	private Animation hitSplashOneAnim;
+	private TextureRegion[] hitSplashOneFrames;
+	private TextureRegion currentFrame;
 
 	public Enemy(int hp, int attackDamage, int attackType, float movementSpeed, float x, float y) {
 		super(hp, attackDamage, attackType, movementSpeed);
@@ -23,6 +34,7 @@ public class Enemy extends Entity {
 		enemyPos = new Vector2(x, y);
 		playerPos = new Vector2();
 		attackDelay = new Random();
+		
 	}
 	
 	public void update(float delta, Rectangle player) {
@@ -52,6 +64,11 @@ public class Enemy extends Entity {
 				stunned = false;
 			}
 		}
+	}
+	
+	public void render(SpriteBatch sb) {
+		
+		
 	}
 	
 	public void attack() {

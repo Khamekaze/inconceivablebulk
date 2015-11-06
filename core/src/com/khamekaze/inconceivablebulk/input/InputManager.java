@@ -1,5 +1,8 @@
 package com.khamekaze.inconceivablebulk.input;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.math.Rectangle;
@@ -11,9 +14,15 @@ public class InputManager implements InputProcessor {
 	private Rectangle mouseHitbox;
 	private Vector3 input;
 	
+	private Map<Integer, TouchInfo> touches = new HashMap<Integer, TouchInfo>();
+	
 	public InputManager() {
 		input = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
 		mouseHitbox = new Rectangle(input.x, input.y, 10, 10);
+		
+		for(int i = 0; i < 2; i++) {
+			touches.put(i, new TouchInfo());
+		}
 	}
 	
 	public void update() {
@@ -51,14 +60,22 @@ public class InputManager implements InputProcessor {
 
 	@Override
 	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-		// TODO Auto-generated method stub
-		return false;
+		if(pointer < 2) {
+			touches.get(pointer).touchX = screenX;
+			touches.get(pointer).touchY = screenY;
+			touches.get(pointer).touched = true;
+		}
+		return true;
 	}
 
 	@Override
 	public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-		// TODO Auto-generated method stub
-		return false;
+		if(pointer < 2) {
+			touches.get(pointer).touchX = 0;
+			touches.get(pointer).touchY = 0;
+			touches.get(pointer).touched = false;
+		}
+		return true;
 	}
 
 	@Override
@@ -77,5 +94,9 @@ public class InputManager implements InputProcessor {
 	public boolean scrolled(int amount) {
 		// TODO Auto-generated method stub
 		return false;
+	}
+	
+	public Map<Integer, TouchInfo> getTouches() {
+		return touches;
 	}
 }

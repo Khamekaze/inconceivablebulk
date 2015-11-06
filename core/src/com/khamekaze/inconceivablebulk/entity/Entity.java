@@ -16,11 +16,13 @@ public class Entity {
 	private float movementSpeed;
 	private float gravity = 0.4f, attackLength = 1;
 	
+	public float groundY = 50;
+	
 	private boolean damageDelay = false;
 
 	protected float y, x;
 
-	private float jumpHeight = 10;
+	private float jumpHeight = 0;
 	
 	private Rectangle hitBox, attackHitbox;
 	
@@ -67,19 +69,8 @@ public class Entity {
 		}
 	}
 	
-	public void jump(float delta) {
-		if(grounded) {
-			if(isAttacking())
-				setIsAttacking(false);
-			y += jumpHeight * delta;
-			hitBox.y = y;
-			hitBox.x = x;
-			grounded = false;
-		}
-	}
-	
 	public void applyGravity(float delta) {
-		if(y > 50)
+		if(y > groundY)
 			grounded = false;
 		if(grounded && jumpHeight < 10) {
 			jumpHeight = 10;
@@ -92,13 +83,12 @@ public class Entity {
 			jumpHeight -= gravity;
 			
 			y += jumpHeight * delta;
-			if(y < 50) {
-				y = 50;
-				grounded = true;
+			if(y < groundY) {
+				y = groundY;
 			}
 		}
 		
-		if(y == 50) {
+		if(y == groundY) {
 			grounded = true;
 		}
 		
