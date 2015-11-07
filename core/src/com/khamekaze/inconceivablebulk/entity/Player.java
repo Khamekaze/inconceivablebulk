@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Rectangle;
 import com.khamekaze.inconceivablebulk.MainGame;
 import com.khamekaze.inconceivablebulk.screen.ScreenManager;
 
@@ -23,8 +24,10 @@ public class Player extends Entity {
 							jumpFrames, airAttackFrames, pwoFrames;
 	private TextureRegion currentFrame;
 	private Sprite streak, playerStomp;
+	private Sprite portrait;
 	private float rotation = 0;
 	private int pwoFrameNumber = 0;
+	private float damageDelayTime = 0.0f;
 	
 	private boolean moveLeft = false, moveRight = false;
 	
@@ -117,72 +120,86 @@ public class Player extends Entity {
 		}
 		
 		if(!pwoAttack) {
-			handleInput(delta, slowmo);
-			applyGravity(delta);
+			if(!getDialogBoolean()) {
+				handleInput(delta, slowmo);
+				applyGravity(delta);
+			}
 			rotation = 0;
 		}
 		
 
-		if(excecuteGP) {
-			jump = false;
-			groundPound = true;
-		}
-		
-		if(groundPound) {
-			specialAttack(delta);
-			if(grounded) {
-				groundPound = false;
+		if(!getDialogBoolean()) {
+			if(excecuteGP) {
+				jump = false;
+				groundPound = true;
+			}
+
+			if(groundPound) {
+				specialAttack(delta);
+				if(grounded) {
+					groundPound = false;
+				}
 			}
 		}
 		
 		if(y > groundY)
 			setGrounded(false);
+		
+		if(getDamageDelayTime() > 0) {
+			setDamageDelayTime(getDamageDelayTime() - 0.1f);
+			if(getDamageDelayTime() <= 0) {
+				setDamageDelayTime(0);
+				setDamageDelay(false);
+			}
+		}
 	}
 	
 	public void render(SpriteBatch sb) {
-		elapsedTime += Gdx.graphics.getDeltaTime();
-		
-		if(!getIsMoving()) {
-			currentFrame = standingAnim.getKeyFrame(elapsedTime, true);
-		} else if(getIsMoving() && isGrounded()) {
-			currentFrame = walkingAnim.getKeyFrame(elapsedTime, true);
+		if(!getDialogBoolean()) {
+			elapsedTime += Gdx.graphics.getDeltaTime();
+
+			if(!getIsMoving()) {
+				currentFrame = standingAnim.getKeyFrame(elapsedTime, true);
+			} else if(getIsMoving() && isGrounded()) {
+				currentFrame = walkingAnim.getKeyFrame(elapsedTime, true);
+			}
+			if(!isGrounded() && !isAttacking()) {
+				jumpFrame += Gdx.graphics.getDeltaTime();
+				currentFrame = jumpAnim.getKeyFrame(jumpFrame, false);
+			} else if(!isGrounded() && !isAttacking() && !getIsMoving()) {
+				jumpFrame += Gdx.graphics.getDeltaTime();
+				currentFrame = jumpAnim.getKeyFrame(jumpFrame, false);
+			}
+
+			if(isAttacking() && isGrounded()) {
+				attackFrame += Gdx.graphics.getDeltaTime();
+				if(selectedAttack == 0)
+					currentFrame = attackingAnimOne.getKeyFrame(attackFrame, false);
+				else if(selectedAttack == 1)
+					currentFrame = attackingAnimTwo.getKeyFrame(attackFrame, false);
+			} else if(isAttacking() && !isGrounded()) {
+				attackFrame += Gdx.graphics.getDeltaTime();
+				currentFrame = airAttackAnim.getKeyFrame(attackFrame, false);
+			}
+
+			if(groundPound) {
+				currentFrame = playerStomp;
+			}
+
+			if(pwoAttack && !isGrounded()) {
+				currentFrame = pwoFrames[pwoFrameNumber];
+			}
+
+			if(!isAttacking() && attackFrame > 0) {
+				attackFrame = 0;
+			}
+
+			if(jumpFrame > 0 && isGrounded()) {
+				jumpFrame = 0;
+			}
+
+			
 		}
-		
-		 if(!isGrounded() && !isAttacking()) {
-			 jumpFrame += Gdx.graphics.getDeltaTime();
-			 currentFrame = jumpAnim.getKeyFrame(jumpFrame, false);
-		 } else if(!isGrounded() && !isAttacking() && !getIsMoving()) {
-			 jumpFrame += Gdx.graphics.getDeltaTime();
-			 currentFrame = jumpAnim.getKeyFrame(jumpFrame, false);
-		 }
-		
-		if(isAttacking() && isGrounded()) {
-			attackFrame += Gdx.graphics.getDeltaTime();
-			if(selectedAttack == 0)
-				currentFrame = attackingAnimOne.getKeyFrame(attackFrame, false);
-			else if(selectedAttack == 1)
-				currentFrame = attackingAnimTwo.getKeyFrame(attackFrame, false);
-		} else if(isAttacking() && !isGrounded()) {
-			attackFrame += Gdx.graphics.getDeltaTime();
-			currentFrame = airAttackAnim.getKeyFrame(attackFrame, false);
-		}
-		
-		if(groundPound) {
-			currentFrame = playerStomp;
-		}
-		
-		if(pwoAttack && !isGrounded()) {
-			currentFrame = pwoFrames[pwoFrameNumber];
-		}
-		
-		if(!isAttacking() && attackFrame > 0) {
-			attackFrame = 0;
-		}
-		
-		if(jumpFrame > 0 && isGrounded()) {
-			jumpFrame = 0;
-		}
-		
 		if(isFacingLeft() && !currentFrame.isFlipX()) {
 			currentFrame.flip(true, false);
 		} else if(isFacingRight() && currentFrame.isFlipX()) {
@@ -194,6 +211,14 @@ public class Player extends Entity {
 		if(pwoAttack) {
 			streak.draw(sb);
 			streak.setAlpha(0);
+		}
+	}
+	
+	public void attacked(Rectangle attacker, float speed) {
+		if(attacker.getX() > x) {
+			x -= 1f * speed;
+		} else if(attacker.getX() < x) {
+			x += 1f * speed;
 		}
 	}
 	
@@ -268,22 +293,24 @@ public class Player extends Entity {
 }
 	
 	public void attack() {
-		selectedAttack = attackSelector.nextInt(2);
-		if(isGrounded()) {
-			if(isFacingLeft()) {
-				setIsAttacking(true);
-			} else if(isFacingRight()) {
-				setIsAttacking(true);
-			}
-		} else if(!isGrounded() && !groundPound) {
-			
-			
-			if(isFacingLeft() && !Gdx.input.isKeyPressed(Input.Keys.S)) {
-				
-				setIsAttacking(true);
-				
-			} else if(isFacingRight() && !Gdx.input.isKeyPressed(Input.Keys.S)) {
-				setIsAttacking(true);
+		if(!getDialogBoolean()) {
+			selectedAttack = attackSelector.nextInt(2);
+			if(isGrounded()) {
+				if(isFacingLeft()) {
+					setIsAttacking(true);
+				} else if(isFacingRight()) {
+					setIsAttacking(true);
+				}
+			} else if(!isGrounded() && !groundPound) {
+
+
+				if(isFacingLeft() && !Gdx.input.isKeyPressed(Input.Keys.S)) {
+
+					setIsAttacking(true);
+
+				} else if(isFacingRight() && !Gdx.input.isKeyPressed(Input.Keys.S)) {
+					setIsAttacking(true);
+				}
 			}
 		}
 	}
@@ -316,42 +343,49 @@ public class Player extends Entity {
 	}
 	
 	public void move(float speed) {
-		if(Gdx.input.isKeyPressed(Input.Keys.A) || moveLeft) {
-			if(grounded && isAttacking()) {
-				setFacingLeft(true);
-				setFacingRight(false);
-				setIsMoving(false);
-			} else {
-				if(!groundPound) {
-					if(x > 0) {
-						x -= getMovementSpeed() * speed;
-						setIsMoving(true);
-						setFacingLeft(true);
-						setFacingRight(false);
-					} else if(x < 0) {
-						x = 0;
-					} else if(x == 0) {
-						setIsMoving(false);
-						setFacingLeft(true);
-						setFacingRight(false);
+		if(!getDialogBoolean()) {
+			if(Gdx.input.isKeyPressed(Input.Keys.A) || moveLeft) {
+				if(grounded && isAttacking()) {
+					setFacingLeft(true);
+					setFacingRight(false);
+					setIsMoving(false);
+				} else {
+					if(!groundPound) {
+						if(x > 0) {
+							x -= getMovementSpeed() * speed;
+							setIsMoving(true);
+							setFacingLeft(true);
+							setFacingRight(false);
+						} else if(x < 0) {
+							x = 0;
+						} else if(x == 0) {
+							setIsMoving(false);
+							setFacingLeft(true);
+							setFacingRight(false);
+						}
 					}
 				}
-			}
-		} else if(Gdx.input.isKeyPressed(Input.Keys.D) || moveRight) {
-			if(grounded && isAttacking()) {
-				setFacingLeft(false);
-				setFacingRight(true);
-				setIsMoving(false);
-			} else {
-				if(!groundPound) {
-					x += getMovementSpeed() * speed;
-					setIsMoving(true);
+			} else if(Gdx.input.isKeyPressed(Input.Keys.D) || moveRight) {
+				if(grounded && isAttacking()) {
 					setFacingLeft(false);
 					setFacingRight(true);
+					setIsMoving(false);
+				} else {
+					if(!groundPound) {
+						if(x < maxDistanceX) {
+							x += getMovementSpeed() * speed;
+							setIsMoving(true);
+							setFacingLeft(false);
+							setFacingRight(true);
+						} else if(x >= maxDistanceX) {
+							x = maxDistanceX;
+							setIsMoving(false);
+						}
+					}
 				}
+			} else {
+				setIsMoving(false);
 			}
-		} else {
-			setIsMoving(false);
 		}
 	}
 	

@@ -77,14 +77,10 @@ public class TestScreen extends Screen {
 		renderer.setColor(Color.BLACK);
 		
 		for(Entity e : test.getEntities()) {
-			if(e.getHp() > 0)
-				renderer.rect(e.getHitBox().x, e.getHitBox().y, e.getHitBox().width, e.getHitBox().height);
+			if(e.isAttacking())
+				renderer.rect(e.getAttackHitbox().x, e.getAttackHitbox().y, e.getAttackHitbox().width, e.getAttackHitbox().height);
 		}
 		
-		if(test.getPlayer().isAttacking()) {
-			renderer.setColor(Color.RED);
-			renderer.rect(test.getPlayer().getAttackHitbox().x, test.getPlayer().getAttackHitbox().y, test.getPlayer().getAttackHitbox().width, test.getPlayer().getAttackHitbox().height);
-		}
 		renderer.end();
 		
 	}
@@ -133,33 +129,44 @@ public class TestScreen extends Screen {
 	}
 	
 	public void zoomCamera() {
-		if(!zoomed && camera.zoom > 0.7f) {
+//		if(!zoomed && camera.zoom > 0.7f) {
+//			slowMotion = true;
+//			camera.position.set(test.getPlayer().getX() + 50, 240 * camera.zoom, 0);
+//			camera.zoom -= 0.08f;
+//			if(camera.zoom <= 0.7f) {
+//				camera.zoom = 0.7f;
+//				camera.position.set(test.getPlayer().getX() + 50, 240 * camera.zoom, 0);
+//				zoomed = true;
+//			}
+//		}
+//		
+//		if(zoomed) {
+//			camera.position.set(test.getPlayer().getX() + 50, 240 * camera.zoom, 0);
+//			if(zoomLength > 0) {
+//				zoomLength -= 0.1f;
+//				if(zoomLength < 0)
+//					zoomLength = 0;
+//			}
+//			if(zoomLength == 0) {
+//				camera.zoom += 0.08f;
+//				camera.position.set(test.getPlayer().getX() + 50, 240 * camera.zoom, 0);
+//				if(camera.zoom >= 1) {
+//					camera.zoom = 1;
+//					zoomLength = 6;
+//					zoomed = false;
+//					test.setEnemyKilled(false);
+//				}
+//			}
+//		}
+		if(slowMotionTime == 6.0f) {
 			slowMotion = true;
-			camera.position.set(test.getPlayer().getX() + 50, 240 * camera.zoom, 0);
-			camera.zoom -= 0.08f;
-			if(camera.zoom <= 0.7f) {
-				camera.zoom = 0.7f;
-				camera.position.set(test.getPlayer().getX() + 50, 240 * camera.zoom, 0);
-				zoomed = true;
-			}
-		}
-		
-		if(zoomed) {
-			camera.position.set(test.getPlayer().getX() + 50, 240 * camera.zoom, 0);
-			if(zoomLength > 0) {
-				zoomLength -= 0.1f;
-				if(zoomLength < 0)
-					zoomLength = 0;
-			}
-			if(zoomLength == 0) {
-				camera.zoom += 0.08f;
-				camera.position.set(test.getPlayer().getX() + 50, 240 * camera.zoom, 0);
-				if(camera.zoom >= 1) {
-					camera.zoom = 1;
-					zoomLength = 6;
-					zoomed = false;
-					test.setEnemyKilled(false);
-				}
+			slowMotionTime -= 0.1f;
+		} else if(slowMotionTime < 6.0f) {
+			slowMotionTime -= 0.1f;
+			if(slowMotionTime <= 0) {
+				slowMotionTime = 0;
+				slowMotion = false;
+				test.setEnemyKilled(false);
 			}
 		}
 	}

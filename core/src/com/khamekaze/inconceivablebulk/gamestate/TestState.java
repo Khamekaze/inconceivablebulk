@@ -3,6 +3,7 @@ package com.khamekaze.inconceivablebulk.gamestate;
 import java.util.Random;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.g2d.Animation;
@@ -34,8 +35,8 @@ public class TestState {
 	
 	private int movePointer = 0, jumpPointer = 0, attackPointer = 0;
 	
-	private float hitSplashTime = 0.0f;
-	public float groundY = 110;
+	private float hitSplashTime = 0.0f, dialogAlpha = 0.0f;
+	public float groundY = 110, levelWidth;
 	private boolean showSplash = false, movingJoystick = false;
 	
 	private Vector2 pwoVector, playerVector;
@@ -45,40 +46,64 @@ public class TestState {
 	private Random random = new Random();
 	
 	private Player player;
-	private Enemy enemy, enemyTwo, enemyThree;
+	private Enemy enemy, enemyTwo, enemyThree, enemyFour, enemyFive, enemySix, enemySeven, enemyEight, enemyNine, enemyTen, enemyEleven;
 	private Array<Enemy> entities;
+	private Array<Sprite> bgSprites;
 	
-	private boolean cameraShake = false, enemyKilled = false, slowMotion = false, cameraXSet = false;
+	private boolean cameraShake = false, enemyKilled = false, slowMotion = false, cameraXSet = false, dialog = false;
 	private float cameraShakeDuration = 0.0f, pwoDuration = 0.0f, pwoCameraX = 0.0f, joyStickRingX;
 	
-	private Sprite bg, joystickRing, joystick, attackButton, jumpButton;
-	private Texture texture;
-	
+	private Sprite bgPartZero, bgPartOne, bgPartTwo, bgPartThree, joystickRing, joystick, attackButton, jumpButton;
+	private Sprite tutorialBoxOne;
 	
 	public TestState() {
 		
 		
 		
-		player = new Player(10, 2, 0, 6);
+		player = new Player(25, 2, 0, 6);
 		player.groundY = groundY;
-		
-		enemy = new Enemy(10, 3, 0, 1, MainGame.WIDTH / 2 + 100, MainGame.HEIGHT / 2);
+		player.setPosition(50, groundY);
+		enemy = new Enemy(10, 3, 0, 1, MainGame.WIDTH / 2 + 100, groundY);
 		enemy.groundY = groundY;
-		enemyTwo = new Enemy(10, 3, 0, 2, MainGame.WIDTH / 2 - 100, MainGame.HEIGHT / 2);
-		enemyTwo.groundY = groundY;
-		enemyThree = new Enemy(10, 3, 0, 0.5f, MainGame.WIDTH / 2 - 200, MainGame.HEIGHT / 2);
-		enemyThree.groundY = groundY;
 		
+		Enemy generated;
 		entities = new Array<Enemy>();
-		
 		entities.add(enemy);
-		entities.add(enemyTwo);
-		entities.add(enemyThree);
+		for(int i = 0; i < 28; i++) {
+			float movement = random.nextInt(4) + 2;
+			float rX = random.nextInt(4200) + enemy.getX();
+			generated = new Enemy(10, 3, 0, movement, rX, groundY);
+			generated.groundY = groundY;
+			entities.add(generated);
+		}
 		
 		renderer = new ShapeRenderer();
-		texture = new Texture("testbg.png");
-		bg = new Sprite(texture);
-		bg.setPosition(0, 0);
+		bgPartZero = new Sprite(new Texture(Gdx.files.internal("rawSprites/environment/levelone/levelonepartzero.png")));
+		bgPartZero.setPosition(-50, 0);
+		bgPartOne = new Sprite(new Texture(Gdx.files.internal("rawSprites/environment/levelone/levelonepartone.png")));
+		bgPartOne.setPosition(bgPartZero.getWidth() - 50, 0);
+		bgPartTwo = new Sprite(new Texture(Gdx.files.internal("rawSprites/environment/levelone/leveloneparttwo.png")));
+		bgPartTwo.setPosition(bgPartOne.getWidth() * 2 - 50, 0);
+		bgPartThree = new Sprite(new Texture(Gdx.files.internal("rawSprites/environment/levelone/levelonepartthree.png")));
+		bgPartThree.setPosition(bgPartOne.getWidth() * 3 - 50, 0);
+		
+		bgSprites = new Array<Sprite>();
+		bgSprites.add(bgPartZero);
+		bgSprites.add(bgPartOne);
+		bgSprites.add(bgPartTwo);
+		bgSprites.add(bgPartThree);
+		
+		for(Sprite s : bgSprites) {
+			levelWidth += s.getWidth();
+		}
+		
+		levelWidth -= 200;
+		
+		player.maxDistanceX = levelWidth;
+		for(Enemy e : entities) {
+			e.maxDistanceX = levelWidth;
+		}
+		
 		
 		pwoVector = new Vector2();
 		playerVector = new Vector2();
@@ -103,43 +128,70 @@ public class TestState {
 		jumpButtonPos.set(ScreenManager.getCurrentScreen().camera.position.x + 400, ScreenManager.getCurrentScreen().camera.position.y + 120, 0);
 		jumpButton.setPosition(jumpButtonPos.x, jumpButtonPos.y);
 		
+		tutorialBoxOne = new Sprite(new Texture(Gdx.files.internal("rawSprites/dialog/tutorialone.png")));
+		tutorialBoxOne.setPosition(enemy.getX() - 75, enemy.getY() + 125);
+		
 	}
 	
 	public void update(float delta, boolean slowmo) {
 		player.update(delta, slowmo);
+		player.setDialogBoolean(dialog);
 		for(Enemy e : entities) {
 			e.update(delta, player.getHitBox());
+			e.setDialogBoolean(dialog);
 		}
-		
+
 		combo.setX(ScreenManager.getCurrentScreen().camera.position.x + 50);
 		combo.setY(ScreenManager.getCurrentScreen().camera.position.y + 150);
 		combo.update(delta);
-		
+
 		if(slowmo) {
 			hitSplashOneAnim.setFrameDuration(1f/2.2f);
 		} else if(!slowmo) {
 			hitSplashOneAnim.setFrameDuration(1f/22f);
 		}
-		
+
 		joystickPos.set(ScreenManager.getCurrentScreen().camera.position.x - 310, ScreenManager.getCurrentScreen().camera.position.y - 180, 0);
 		jumpButtonPos.set(ScreenManager.getCurrentScreen().camera.position.x + 230, ScreenManager.getCurrentScreen().camera.position.y - 180, 0);
 		attackButtonPos.set(ScreenManager.getCurrentScreen().camera.position.x + 130, ScreenManager.getCurrentScreen().camera.position.y - 180, 0);
-		
+
 		pwoAttack(delta);
-		
+
 		checkCollisions(delta);
-		
+
 		handleJoystick();
 	}
 	
 	public void render(SpriteBatch sb) {
 		
+		bgPartZero.draw(sb);
+		bgPartOne.draw(sb);
+		bgPartTwo.draw(sb);
+		bgPartThree.draw(sb);
 		
-		bg.draw(sb);
+		if(player.getX() >= tutorialBoxOne.getX() - 25 && player.getX() <= tutorialBoxOne.getX() + 175) {
+			if(dialogAlpha < 1)
+				dialogAlpha += 0.1f;
+			else if(dialogAlpha >= 1)
+				dialogAlpha = 1;
+			
+		} else {
+			if(dialogAlpha > 0)
+				dialogAlpha -= 0.1f;
+			else if(dialogAlpha <= 0.2f)
+				dialogAlpha = 0;
+		}
+		
+		tutorialBoxOne.setAlpha(dialogAlpha);
+		tutorialBoxOne.draw(sb);
+		
 		for(Enemy e : entities) {
 			e.render(sb);
 		}
 		player.render(sb);
+		
+		
+			
 		
 		if(player.isAttacking() && !player.getGroundPound()) {
 			hitSplashTime += Gdx.graphics.getDeltaTime();
@@ -209,16 +261,14 @@ public class TestState {
 						touchPos.y > joystickPos.y && touchPos.y < joystickPos.y + 100) {
 					movePointer = i;
 					movingJoystick = true;
-				}
-				if(touchPos.x > jumpButtonPos.x && touchPos.x < jumpButtonPos.x + 75 &&
+				} else if(touchPos.x > jumpButtonPos.x && touchPos.x < jumpButtonPos.x + 75 &&
 						touchPos.y > jumpButtonPos.y && touchPos.y < jumpButtonPos.y + 75) {
 					jumpPointer = i;
 					if(!player.getJumpBool()) {
 						player.setJumpBool(true);
 					}
 					
-				} 
-				if(touchPos.x > attackButtonPos.x && touchPos.x < attackButtonPos.x + 75 &&
+				} else if(touchPos.x > attackButtonPos.x && touchPos.x < attackButtonPos.x + 75 &&
 						touchPos.y > attackButtonPos.y && touchPos.y < attackButtonPos.y + 75) {
 					if(!player.isAttacking() && player.getAttackLength() != 0 && !player.getJustAttacked()) {
 							attackPointer = i;
@@ -242,6 +292,8 @@ public class TestState {
 				if(!ScreenManager.getCurrentScreen().inputManager.getTouches().get(attackPointer).touched) {
 					player.setJustAttacked(false);
 					attackPointer = -1;
+					if(movePointer > 0)
+						movePointer = 0;
 				}
 			}
 			
@@ -249,6 +301,8 @@ public class TestState {
 				if(!ScreenManager.getCurrentScreen().inputManager.getTouches().get(jumpPointer).touched) {
 					player.setJumpBool(false);
 					jumpPointer = -1;
+					if(movePointer > 0)
+						movePointer = 0;
 				}
 			}
 		}
@@ -270,7 +324,6 @@ public class TestState {
 			if(e.getHp() > 0) {
 				if(player.isAttacking()) {
 					if(e.checkCollision(player.getAttackHitbox())) {
-						
 						showSplash = true;
 						e.setStunned(true);
 						e.setStunTime(3);
@@ -287,13 +340,25 @@ public class TestState {
 						combo.setComboShow(10);
 						
 					}
+					if(cameraShake) {
+						if(e.getX() > player.getX() - 450 && e.getX() < player.getX() + 550)
+							e.setAlerted(true);
+					}
 				}
 
-				if(e.isAttacking())
-					player.checkCollision(e.getAttackHitbox());
+				if(player.checkCollision(e.getAttackHitbox()) && !e.isStunned() && e.isAlerted()) {
+					e.setExcecuteAttack(true);
+					if(!player.getDamageDelay() && e.isAttacking()) {
+						player.takeDamage(e.getAttackDamage());
+						e.attacked(e.getHitBox(), speed);
+						System.out.println(player.getHp());
+					}
+				}
 
 				if(e.getHp() <= 0) {
 					enemyKilled = true;
+					e.setIsAttacking(false);
+					e.setExcecuteAttack(false);
 				}
 
 				if(!player.isAttacking())

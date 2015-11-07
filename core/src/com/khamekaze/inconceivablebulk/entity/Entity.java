@@ -8,7 +8,7 @@ public class Entity {
 	
 	private int stopped = 0, moveLeft = 1, moveRight = 2; 
 	
-	private boolean facingRight = true, facingLeft = false, moving = false;
+	private boolean facingRight = true, facingLeft = false, moving = false, dialog = false;
 
 	protected boolean grounded = false, attacking = false;
 	
@@ -16,9 +16,10 @@ public class Entity {
 	private float movementSpeed;
 	private float gravity = 0.4f, attackLength = 1;
 	
-	public float groundY = 50;
+	public float groundY = 50, maxDistanceX;
 	
 	private boolean damageDelay = false;
+	private float damageDelayTime = 0.0f;
 
 	protected float y, x;
 
@@ -41,31 +42,33 @@ public class Entity {
 	}
 	
 	public void move(int direction, float delta) {
-		moving = false;
-		if(direction == moveLeft) {
-			if(grounded && attacking) {
-				facingLeft = true;
-				facingRight = false;
-				moving = false;
-			} else {
-				x -= movementSpeed * delta;
-				facingLeft = true;
-				facingRight = false;
-				moving = true;
-			}
-		} else if(direction == moveRight) {
-			if(grounded && attacking) {
-				facingLeft = false;
-				facingRight = true;
-				moving = false;
-			} else {
-				x += movementSpeed * delta;
-				facingLeft = false;
-				facingRight = true;
-				moving = true;
-			}
-		} else if(direction == stopped) {
+		if(!dialog) {
 			moving = false;
+			if(direction == moveLeft) {
+				if(grounded && attacking) {
+					facingLeft = true;
+					facingRight = false;
+					moving = false;
+				} else {
+					x -= movementSpeed * delta;
+					facingLeft = true;
+					facingRight = false;
+					moving = true;
+				}
+			} else if(direction == moveRight) {
+				if(grounded && attacking) {
+					facingLeft = false;
+					facingRight = true;
+					moving = false;
+				} else {
+					x += movementSpeed * delta;
+					facingLeft = false;
+					facingRight = true;
+					moving = true;
+				}
+			} else if(direction == stopped) {
+				moving = false;
+			}
 		}
 	}
 	
@@ -94,6 +97,13 @@ public class Entity {
 		
 		hitBox.x = x;
 		hitBox.y = y;
+		if(facingLeft) {
+			attackHitbox.x = x;
+			attackHitbox.y = y + 50;
+		} else if(facingRight) {
+			attackHitbox.x = x + 50;
+			attackHitbox.y = y + 50;
+		}
 	}
 	
 	public void attacked(Rectangle attacker, float speed) {
@@ -119,6 +129,7 @@ public class Entity {
 				hp = 0;
 			}
 			damageDelay = true;
+			damageDelayTime = 10;
 		}
 	}
 	
@@ -304,6 +315,22 @@ public class Entity {
 	
 	public void setIsMoving(boolean moving) {
 		this.moving = moving;
+	}
+	
+	public void setDialogBoolean(boolean dialog) {
+		this.dialog = dialog;
+	}
+	
+	public boolean getDialogBoolean() {
+		return dialog;
+	}
+	
+	public void setDamageDelayTime(float delay) {
+		this.damageDelayTime = delay;
+	}
+	
+	public float getDamageDelayTime() {
+		return damageDelayTime;
 	}
 
 }
