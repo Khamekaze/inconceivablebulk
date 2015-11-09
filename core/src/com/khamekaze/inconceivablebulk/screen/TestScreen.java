@@ -88,6 +88,7 @@ public class TestScreen extends Screen {
 	@Override
 	public void resize(int width, int height) {
 		camera.translate(camera.viewportWidth / 2, yPos, 0);
+		viewPort.update(width, height);
 	}
 	
 	public void cameraShakeExecute() {
@@ -129,35 +130,6 @@ public class TestScreen extends Screen {
 	}
 	
 	public void zoomCamera() {
-//		if(!zoomed && camera.zoom > 0.7f) {
-//			slowMotion = true;
-//			camera.position.set(test.getPlayer().getX() + 50, 240 * camera.zoom, 0);
-//			camera.zoom -= 0.08f;
-//			if(camera.zoom <= 0.7f) {
-//				camera.zoom = 0.7f;
-//				camera.position.set(test.getPlayer().getX() + 50, 240 * camera.zoom, 0);
-//				zoomed = true;
-//			}
-//		}
-//		
-//		if(zoomed) {
-//			camera.position.set(test.getPlayer().getX() + 50, 240 * camera.zoom, 0);
-//			if(zoomLength > 0) {
-//				zoomLength -= 0.1f;
-//				if(zoomLength < 0)
-//					zoomLength = 0;
-//			}
-//			if(zoomLength == 0) {
-//				camera.zoom += 0.08f;
-//				camera.position.set(test.getPlayer().getX() + 50, 240 * camera.zoom, 0);
-//				if(camera.zoom >= 1) {
-//					camera.zoom = 1;
-//					zoomLength = 6;
-//					zoomed = false;
-//					test.setEnemyKilled(false);
-//				}
-//			}
-//		}
 		if(slowMotionTime == 6.0f) {
 			slowMotion = true;
 			slowMotionTime -= 0.1f;
