@@ -3,7 +3,6 @@ package com.khamekaze.inconceivablebulk.gamestate;
 import java.util.Random;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.g2d.Animation;
@@ -16,11 +15,18 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.khamekaze.inconceivablebulk.MainGame;
 import com.khamekaze.inconceivablebulk.combo.Combo;
+import com.khamekaze.inconceivablebulk.entity.Coin;
 import com.khamekaze.inconceivablebulk.entity.Enemy;
 import com.khamekaze.inconceivablebulk.entity.Player;
+import com.khamekaze.inconceivablebulk.environment.SpawnPoint;
+import com.khamekaze.inconceivablebulk.gui.CoinsGUI;
+import com.khamekaze.inconceivablebulk.gui.HealthGUI;
 import com.khamekaze.inconceivablebulk.screen.ScreenManager;
 
 public class TestState {
+	
+	private HealthGUI healthGUI;
+	private CoinsGUI coinsGUI;
 	
 	private ShapeRenderer renderer;
 	
@@ -37,7 +43,8 @@ public class TestState {
 	
 	private float hitSplashTime = 0.0f, dialogAlpha = 0.0f;
 	public float groundY = 110, levelWidth;
-	private boolean showSplash = false, movingJoystick = false;
+	private boolean showSplash = false, movingJoystick = false, hasStarted = false;
+	private float spawnDelayTime = 0;
 	
 	private Vector2 pwoVector, playerVector;
 	
@@ -49,6 +56,9 @@ public class TestState {
 	private Enemy enemy, enemyTwo, enemyThree, enemyFour, enemyFive, enemySix, enemySeven, enemyEight, enemyNine, enemyTen, enemyEleven;
 	private Array<Enemy> entities;
 	private Array<Sprite> bgSprites;
+	private Array<Coin> coins = new Array<Coin>();
+	private Array<SpawnPoint> spawnPoints;
+	private float[] spawnPointsX = new float[5];
 	
 	private boolean cameraShake = false, enemyKilled = false, slowMotion = false, cameraXSet = false, dialog = false;
 	private float cameraShakeDuration = 0.0f, pwoDuration = 0.0f, pwoCameraX = 0.0f, joyStickRingX;
@@ -58,7 +68,11 @@ public class TestState {
 	
 	public TestState() {
 		
+		healthGUI = new HealthGUI(ScreenManager.getCurrentScreen().camera.position.x, ScreenManager.getCurrentScreen().camera.position.y);
+		coinsGUI = new CoinsGUI(ScreenManager.getCurrentScreen().camera.position.x, ScreenManager.getCurrentScreen().camera.position.y);
 		
+		spawnPoints = new Array<SpawnPoint>();
+		setSpawnPoints();
 		
 		player = new Player(25, 2, 0, 6);
 		player.groundY = groundY;
@@ -66,16 +80,9 @@ public class TestState {
 		enemy = new Enemy(10, 3, 0, 1, MainGame.WIDTH / 2 + 100, groundY);
 		enemy.groundY = groundY;
 		
-		Enemy generated;
 		entities = new Array<Enemy>();
 		entities.add(enemy);
-		for(int i = 0; i < 28; i++) {
-			float movement = random.nextInt(4) + 2;
-			float rX = random.nextInt(4200) + enemy.getX();
-			generated = new Enemy(10, 3, 0, movement, rX, groundY);
-			generated.groundY = groundY;
-			entities.add(generated);
-		}
+		
 		
 		renderer = new ShapeRenderer();
 		bgPartZero = new Sprite(new Texture(Gdx.files.internal("rawSprites/environment/levelone/levelonepartzero.png")));
@@ -136,6 +143,8 @@ public class TestState {
 	public void update(float delta, boolean slowmo) {
 		player.update(delta, slowmo);
 		player.setDialogBoolean(dialog);
+		
+		healthGUI.setLifeBarWidth(10 * player.getHp());
 		for(Enemy e : entities) {
 			e.update(delta, player.getHitBox());
 			e.setDialogBoolean(dialog);
@@ -144,6 +153,14 @@ public class TestState {
 		combo.setX(ScreenManager.getCurrentScreen().camera.position.x + 50);
 		combo.setY(ScreenManager.getCurrentScreen().camera.position.y + 150);
 		combo.update(delta);
+		
+		float healthGUIX = ScreenManager.getCurrentScreen().camera.position.x - ScreenManager.getCurrentScreen().camera.viewportWidth / 2 + 15;
+		float healthGUIY = ScreenManager.getCurrentScreen().camera.position.y + ScreenManager.getCurrentScreen().camera.viewportHeight / 2 -
+							65;
+		
+		healthGUI.setPosition(healthGUIX, healthGUIY);
+		healthGUI.update();
+		coinsGUI.setPosition(healthGUIX, healthGUIY - 10);
 
 		if(slowmo) {
 			hitSplashOneAnim.setFrameDuration(1f/2.2f);
@@ -154,12 +171,26 @@ public class TestState {
 		joystickPos.set(ScreenManager.getCurrentScreen().camera.position.x - 310, ScreenManager.getCurrentScreen().camera.position.y - 180, 0);
 		jumpButtonPos.set(ScreenManager.getCurrentScreen().camera.position.x + 230, ScreenManager.getCurrentScreen().camera.position.y - 180, 0);
 		attackButtonPos.set(ScreenManager.getCurrentScreen().camera.position.x + 130, ScreenManager.getCurrentScreen().camera.position.y - 180, 0);
-
+		
+		if(coins.size != 0) {
+			for(Coin c : coins) {
+				if(!c.isPickedUp()) {
+					c.checkIfPickedUp(player);
+					c.update(delta);
+				}
+			}
+		}
+		
+		coinsGUI.setCoins(player.getPickedUpCoins());
+		
 		pwoAttack(delta);
 
 		checkCollisions(delta);
-
-		handleJoystick();
+		
+		if(!player.isStunned())
+			handleJoystick();
+		
+		spawnEnemies();
 	}
 	
 	public void render(SpriteBatch sb) {
@@ -187,6 +218,13 @@ public class TestState {
 		
 		for(Enemy e : entities) {
 			e.render(sb);
+		}
+		
+		if(coins.size != 0) {
+			for(Coin c : coins) {
+				if(!c.isPickedUp())
+					c.render(sb);
+			}
 		}
 		player.render(sb);
 		
@@ -239,6 +277,8 @@ public class TestState {
 		jumpButton.draw(sb);
 		
 		combo.render(sb);
+		healthGUI.render(sb);
+		coinsGUI.render(sb);
 	}
 	
 	public void loadSprites() {
@@ -250,6 +290,64 @@ public class TestState {
 		}
 		
 		currentFrame = hitSplashOneFrames[0];
+	}
+	
+	public void setSpawnPoints() {
+		spawnPointsX[0] = 800;
+		spawnPointsX[1] = 2000;
+		spawnPointsX[2] = 3000;
+		spawnPointsX[3] = 3800;
+		spawnPointsX[4] = 4400;
+		
+		SpawnPoint spawn;
+		for(int i = 0; i < 5; i++) {
+			spawn = new SpawnPoint(spawnPointsX[i]);
+			spawnPoints.add(spawn);
+		}
+	}
+	
+	public void spawnCoin() {
+		Coin coin = new Coin(player.getX() + 50, player.getY() + 100, groundY);
+		coins.add(coin);
+	}
+	
+	public void spawnEnemies() {
+		for(SpawnPoint s : spawnPoints) {
+			if(player.getX() > s.getX() - 800 && !s.isChecked() && spawnDelayTime == 0) {
+				Enemy generated;
+				for(int i = 0; i < 10; i++) {
+					float movement = random.nextInt(4) + 2;
+					float rX = random.nextInt(2);
+					if(rX == 0) {
+						rX = player.getX() + 700;
+					} else if(rX == 1) {
+						rX = player.getX() - 700;
+					}
+					if(rX < 0) 
+						rX = 800;
+					else if(player.getX() < 100) 
+						rX = 1300;
+					generated = new Enemy(10, 3, 0, movement, rX, groundY);
+					generated.groundY = groundY;
+					if(hasStarted)
+						generated.setAlerted(true);
+					else 
+						generated.setAlerted(false);
+					entities.add(generated);
+					
+				}
+				
+				spawnDelayTime = 60;
+			} else if(player.getX() >= s.getX() && !s.isChecked()) {
+				s.setChecked(true);
+			}
+		}
+		
+		if(spawnDelayTime > 0) {
+			spawnDelayTime -= 0.1f;
+			if(spawnDelayTime < 0)
+				spawnDelayTime = 0;
+		}
 	}
 	
 	public void handleJoystick() {
@@ -307,15 +405,17 @@ public class TestState {
 			}
 		}
 		
-		if(joystick.getX() + 50 > joyStickRingX + 10) {
-			player.setMoveLeft(false);
-			player.setMoveRight(true);
-		} else if(joystick.getX() + 50 < joyStickRingX - 10) {
-			player.setMoveLeft(true);
-			player.setMoveRight(false);
-		} else {
-			player.setMoveLeft(false);
-			player.setMoveRight(false);
+		if(!player.isStunned()) {
+			if(joystick.getX() + 50 > joyStickRingX + 10) {
+				player.setMoveLeft(false);
+				player.setMoveRight(true);
+			} else if(joystick.getX() + 50 < joyStickRingX - 10) {
+				player.setMoveLeft(true);
+				player.setMoveRight(false);
+			} else {
+				player.setMoveLeft(false);
+				player.setMoveRight(false);
+			}
 		}
 	}
 	
@@ -324,11 +424,19 @@ public class TestState {
 			if(e.getHp() > 0) {
 				if(player.isAttacking()) {
 					if(e.checkCollision(player.getAttackHitbox())) {
+						if(!hasStarted)
+							hasStarted = true;
 						showSplash = true;
 						e.setStunned(true);
 						e.setStunTime(3);
-						if(!e.getDamageDelay())
+						if(!e.getDamageDelay()) {
 							combo.setComboAmount(combo.getComboAmount() + 1);
+							int amount = combo.getComboAmount() % 6;
+							if(amount == 0) {
+								spawnCoin();
+								amount = -1;
+							}
+						}
 						e.takeDamage(player.getAttackDamage());
 						
 						if(!player.getGroundPound()) {
@@ -348,9 +456,11 @@ public class TestState {
 
 				if(player.checkCollision(e.getAttackHitbox()) && !e.isStunned() && e.isAlerted()) {
 					e.setExcecuteAttack(true);
-					if(!player.getDamageDelay() && e.isAttacking()) {
+					if(!player.getDamageDelay() && e.isAttacking() && !player.isAttacking()) {
 						player.takeDamage(e.getAttackDamage());
-						e.attacked(e.getHitBox(), speed);
+						player.setStunned(true);
+						player.setStunTime(3);
+						player.attacked(e.getHitBox(), speed);
 						System.out.println(player.getHp());
 					}
 				}

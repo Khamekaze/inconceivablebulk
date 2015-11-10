@@ -18,6 +18,8 @@ public class Player extends Entity {
 	
 	private boolean groundPound = false, pwoAttack = false, jump = false, justAttacked = false, excecuteGP = false;
 	
+	private int pickedUpCoins = 0;
+	
 	private Animation 		standingAnim, walkingAnim, attackingAnimOne, attackingAnimTwo, dyingAnim,
 					  		jumpAnim, airAttackAnim;
 	private TextureRegion[] walkFrames, stanceFrames, attackOneFrames, attackTwoFrames,
@@ -27,9 +29,9 @@ public class Player extends Entity {
 	private Sprite portrait;
 	private float rotation = 0;
 	private int pwoFrameNumber = 0;
-	private float damageDelayTime = 0.0f;
+	private float damageDelayTime = 0.0f, stunTime = 0.0f;
 	
-	private boolean moveLeft = false, moveRight = false;
+	private boolean moveLeft = false, moveRight = false, stunned = false;
 	
 	private Random attackSelector = new Random();
 	private int selectedAttack = 0;
@@ -121,7 +123,8 @@ public class Player extends Entity {
 		
 		if(!pwoAttack) {
 			if(!getDialogBoolean()) {
-				handleInput(delta, slowmo);
+				if(!stunned)
+					handleInput(delta, slowmo);
 				applyGravity(delta);
 			}
 			rotation = 0;
@@ -150,6 +153,14 @@ public class Player extends Entity {
 			if(getDamageDelayTime() <= 0) {
 				setDamageDelayTime(0);
 				setDamageDelay(false);
+			}
+		}
+		
+		if(stunned && isGrounded()) {
+			stunTime -= 0.1f;
+			if(stunTime <0) {
+				stunTime = 0;
+				stunned = false;
 			}
 		}
 	}
@@ -452,4 +463,28 @@ public class Player extends Entity {
 	public void setExcecuteGP(boolean gp) {
 		this.excecuteGP = gp;
 	}
-}
+	
+	public void setPickedUpCoins(int coins) {
+		this.pickedUpCoins = coins;
+	}
+	
+	public int getPickedUpCoins() {
+		return pickedUpCoins;
+	}
+	
+	public float getStunTime() {
+		return stunTime;
+	}
+	
+	public void setStunTime(float time) {
+		this.stunTime = time;
+	}
+	
+	public void setStunned(boolean stunned) {
+		this.stunned = stunned;
+	}
+	
+	public boolean isStunned() {
+		return stunned;
+	}
+} 

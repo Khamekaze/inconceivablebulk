@@ -152,11 +152,9 @@ public class Enemy extends Entity {
 					attackTime = 2;
 					attackCd = (float) attackDelay.nextInt(10) + 3;
 					hasAttacked = true;
-					System.out.println("DELAY");
 				} else if(attackCd > 0 && hasAttacked && !stunned) {
 					attackCd -= 0.1f;
 					if(attackCd <= 0 && hasAttacked && !stunned) {
-						System.out.println("ATTACK ENDED");
 						attackCd = 0;
 						setIsAttacking(true);
 					}
