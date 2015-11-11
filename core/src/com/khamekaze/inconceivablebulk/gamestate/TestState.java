@@ -3,6 +3,7 @@ package com.khamekaze.inconceivablebulk.gamestate;
 import java.util.Random;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.g2d.Animation;
@@ -60,7 +61,7 @@ public class TestState {
 	private Array<SpawnPoint> spawnPoints;
 	private float[] spawnPointsX = new float[5];
 	
-	private boolean cameraShake = false, enemyKilled = false, slowMotion = false, cameraXSet = false, dialog = false, boosFight = false;
+	private boolean cameraShake = false, enemyKilled = false, slowMotion = false, cameraXSet = false, dialog = false, bossFight = false, playerInBossArea = false;
 	private float cameraShakeDuration = 0.0f, pwoDuration = 0.0f, pwoCameraX = 0.0f, joyStickRingX;
 	
 	private Sprite bgPartZero, bgPartOne, bgPartTwo, bgPartThree, joystickRing, joystick, attackButton, jumpButton;
@@ -76,7 +77,7 @@ public class TestState {
 		
 		player = new Player(25, 2, 0, 6);
 		player.groundY = groundY;
-		player.setPosition(50, groundY);
+		player.setPosition(3500, groundY);
 		enemy = new Enemy(10, 3, 0, 1, MainGame.WIDTH / 2 + 100, groundY);
 		enemy.groundY = groundY;
 		
@@ -192,6 +193,12 @@ public class TestState {
 		
 		if(!player.isPwoAttack())
 			spawnEnemies();
+		
+		checkIfBossBattle();
+		if(bossFight)
+			bossFight();
+		
+		winStateWhoop();
 	}
 	
 	public void render(SpriteBatch sb) {
@@ -298,7 +305,7 @@ public class TestState {
 		spawnPointsX[1] = 2000;
 		spawnPointsX[2] = 3000;
 		spawnPointsX[3] = 3800;
-		spawnPointsX[4] = 4400;
+		spawnPointsX[4] = 4100;
 		
 		SpawnPoint spawn;
 		for(int i = 0; i < 5; i++) {
@@ -310,6 +317,62 @@ public class TestState {
 	public void spawnCoin() {
 		Coin coin = new Coin(player.getX() + 50, player.getY() + 100, groundY);
 		coins.add(coin);
+	}
+	
+	public void checkIfBossBattle() {
+		int spawnCount = 0;
+		int enemyCount = 0;
+		for(SpawnPoint s : spawnPoints) {
+			if(!s.isChecked())
+				spawnCount++;
+		}
+		
+		for(Enemy e : entities) {
+			if(e.getHp() > 0) {
+				enemyCount++;
+			}
+		}
+		
+		if(enemyCount > 0 || spawnCount > 0) {
+			bossFight = false;
+		} else {
+			bossFight = true;
+		}
+		
+		if(bossFight && player.getX() > levelWidth - 450) {
+			playerInBossArea = true;
+			
+			if(player.getX() > levelWidth - 450) {
+				player.setMoveLeft(true);
+				player.setMoveRight(false);
+				player.move(1);
+				if(player.getX() <= levelWidth - 450) {
+					dialog = true;
+					player.setX(levelWidth - 450); 
+					player.setMoveLeft(false);
+					player.setIsMoving(false);
+					player.setFacingRight(true);
+					player.setFacingLeft(false);
+					player.setIsMoving(false);
+				}
+			}
+		}
+	}
+	
+	public void winStateWhoop() {
+		if(Gdx.input.isKeyJustPressed(Input.Keys.X)) {
+			for(Enemy e : entities) {
+				e.setHp(0);
+			}
+			
+			for(SpawnPoint p : spawnPoints) {
+				p.setChecked(true);
+			}
+		}
+	}
+	
+	public void bossFight() {
+		
 	}
 	
 	public void spawnEnemies() {
@@ -679,6 +742,14 @@ public class TestState {
 	
 	public boolean getCameraXSet() {
 		return cameraXSet;
+	}
+	
+	public boolean isBossFight() {
+		return bossFight;
+	}
+	
+	public boolean isPlayerInBossArea() {
+		return playerInBossArea;
 	}
 
 }

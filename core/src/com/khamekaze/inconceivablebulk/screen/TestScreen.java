@@ -37,25 +37,29 @@ public class TestScreen extends Screen {
 
 	@Override
 	public void update() {
-		if(test.getCameraShakeBool() && !test.getEnemyKilled()) {
-			if(!test.getCameraXSet()) {
-				cameraShakeExecute();
-			} else if(test.getCameraXSet()) {
-				pwoCameraShakeExecute();
+		if(!test.isPlayerInBossArea()) {
+			if(test.getCameraShakeBool() && !test.getEnemyKilled()) {
+				if(!test.getCameraXSet()) {
+					cameraShakeExecute();
+				} else if(test.getCameraXSet()) {
+					pwoCameraShakeExecute();
+				}
+			} else if(!test.getEnemyKilled() && !test.getCameraXSet() && cameraRecentered) {
+				camera.position.set(test.getPlayer().getX() + 50, yPos, 0);
+			}  else if(!test.getEnemyKilled() && test.getCameraXSet()) {
+				cameraRecentered = false;
+				camera.position.set(test.getPwoCameraX(), yPos, 0);
+			} else if(!cameraRecentered) {
+				smoothResetCamera();
 			}
-		} else if(!test.getEnemyKilled() && !test.getCameraXSet() && cameraRecentered) {
-			camera.position.set(test.getPlayer().getX() + 50, yPos, 0);
-		}  else if(!test.getEnemyKilled() && test.getCameraXSet()) {
-			cameraRecentered = false;
-			camera.position.set(test.getPwoCameraX(), yPos, 0);
-		} else if(!cameraRecentered) {
-			smoothResetCamera();
-		}
-		
-		pwoCameraPan();
-		
-		if(test.getEnemyKilled()) {
-			zoomCamera();
+
+			pwoCameraPan();
+
+			if(test.getEnemyKilled()) {
+				zoomCamera();
+			}
+		} else if(test.isBossFight() && test.isPlayerInBossArea()) {
+			bossFightCamera();
 		}
 		
 		slowMotion();
@@ -157,6 +161,19 @@ public class TestScreen extends Screen {
 					camera.position.x = test.getPlayer().getX() + 50;
 					cameraRecentered = true;
 				}
+			}
+		}
+	}
+	
+	public void bossFightCamera() {
+		if(camera.position.x < test.levelWidth - 200) {
+			camera.position.x += 4;
+			if(camera.position.x > test.levelWidth - 200)
+				camera.position.x = test.levelWidth - 200;
+		} else if(camera.position.x > test.levelWidth - 200) {
+			camera.position.x -= 4;
+			if(camera.position.x < test.levelWidth - 200) {
+				camera.position.x = test.levelWidth - 200;
 			}
 		}
 	}

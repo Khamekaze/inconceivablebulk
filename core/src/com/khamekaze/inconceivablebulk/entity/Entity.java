@@ -16,7 +16,7 @@ public class Entity {
 	private float movementSpeed;
 	private float gravity = 0.4f, attackLength = 1;
 	
-	public float groundY = 50, maxDistanceX;
+	public float groundY = 50, maxDistanceX, minDistanceX;
 	
 	private boolean damageDelay = false;
 	private float damageDelayTime = 0.0f;

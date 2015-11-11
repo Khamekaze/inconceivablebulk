@@ -58,6 +58,7 @@ public class Player extends Entity {
 		jumpAnim = new Animation(1f/22f, jumpFrames);
 		playerStomp = new Sprite(new Texture(Gdx.files.internal("rawSprites/player/stomp/playerstomp.png")));
 		elapsedTime = 0f;
+		minDistanceX = 0;
 	}
 	
 	public void loadSprites() {
@@ -166,14 +167,14 @@ public class Player extends Entity {
 	}
 	
 	public void render(SpriteBatch sb) {
+		elapsedTime += Gdx.graphics.getDeltaTime();
+		if(!getIsMoving()) {
+			currentFrame = standingAnim.getKeyFrame(elapsedTime, true);
+		} else if(getIsMoving() && isGrounded()) {
+			currentFrame = walkingAnim.getKeyFrame(elapsedTime, true);
+		}
+		
 		if(!getDialogBoolean()) {
-			elapsedTime += Gdx.graphics.getDeltaTime();
-
-			if(!getIsMoving()) {
-				currentFrame = standingAnim.getKeyFrame(elapsedTime, true);
-			} else if(getIsMoving() && isGrounded()) {
-				currentFrame = walkingAnim.getKeyFrame(elapsedTime, true);
-			}
 			if(!isGrounded() && !isAttacking()) {
 				jumpFrame += Gdx.graphics.getDeltaTime();
 				currentFrame = jumpAnim.getKeyFrame(jumpFrame, false);
@@ -362,14 +363,14 @@ public class Player extends Entity {
 					setIsMoving(false);
 				} else {
 					if(!groundPound) {
-						if(x > 0) {
+						if(x > minDistanceX) {
 							x -= getMovementSpeed() * speed;
 							setIsMoving(true);
 							setFacingLeft(true);
 							setFacingRight(false);
-						} else if(x < 0) {
-							x = 0;
-						} else if(x == 0) {
+						} else if(x < minDistanceX) {
+							x = minDistanceX;
+						} else if(x == minDistanceX) {
 							setIsMoving(false);
 							setFacingLeft(true);
 							setFacingRight(false);
