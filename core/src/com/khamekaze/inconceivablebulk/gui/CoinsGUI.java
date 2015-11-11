@@ -1,20 +1,23 @@
 package com.khamekaze.inconceivablebulk.gui;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 
 public class CoinsGUI {
 	
 	private float x, y;
 	private BitmapFont font;
+	private FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/ARIAL.ttf"));
 	private String text;
 	private int coins;
 	
 	public CoinsGUI(float x, float y) {
 		this.x = x;
 		this.y = y;
-		font = new BitmapFont();
+		font = generator.generateFont(20);
 		font.setColor(Color.WHITE);
 		coins = 0;
 		text = "COINS: " + coins;

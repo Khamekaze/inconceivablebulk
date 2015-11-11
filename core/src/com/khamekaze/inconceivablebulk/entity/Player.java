@@ -301,7 +301,7 @@ public class Player extends Entity {
 		getHitBox().y = y;
 		getHitBox().x = x;
 		grounded = false;
-}
+	}
 	
 	public void attack() {
 		if(!getDialogBoolean()) {

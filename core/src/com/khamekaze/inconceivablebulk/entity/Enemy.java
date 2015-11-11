@@ -4,6 +4,7 @@ import java.util.Random;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -13,7 +14,7 @@ import com.badlogic.gdx.math.Vector2;
 
 public class Enemy extends Entity {
 	
-	private float launchHeight = 0.0f;
+	private float launchHeight = 0.0f, elapsedTime = 0.0f;
 	private boolean launched = false, alerted = false, excecuteAttack = false;
 	private Vector2 enemyPos, playerPos;
 	private Random attackDelay;
@@ -25,9 +26,12 @@ public class Enemy extends Entity {
 	private float deathTime = 10f;
 	private float alpha = 1.0f;
 	private float xVel = 0, yVel = 0;
+	private int airDirection = 0;
 	
-	private Animation hitSplashOneAnim;
-	private TextureRegion[] hitSplashOneFrames;
+	private Random random = new Random();
+	
+	private Animation hitSplashOneAnim, pwoIndicatorAnim;
+	private TextureRegion[] hitSplashOneFrames, pwoIndicatorFrames;
 	private TextureRegion currentFrame;
 	
 	private Sprite sprite, portrait;
@@ -40,6 +44,9 @@ public class Enemy extends Entity {
 		playerPos = new Vector2();
 		attackDelay = new Random();
 		sprite = new Sprite(new Texture(Gdx.files.internal("rawSprites/enemy/chicken.png")));
+		pwoIndicatorFrames = new TextureRegion[19];
+		loadAnimations();
+		pwoIndicatorAnim = new Animation(1f/22f, pwoIndicatorFrames);
 	}
 	
 	public void update(float delta, Rectangle player) {
@@ -57,18 +64,32 @@ public class Enemy extends Entity {
 		enemyPos.set(x + 50, y + 50);
 		playerPos.set(player.x + 50, player.y + 50);
 		int direction = 0;
-		if(alerted) {
+		if(alerted && grounded) {
 			if(enemyPos.x > playerPos.x + 75)
 				direction = 1;
 			else if(enemyPos.x < playerPos.x - 75)
 				direction = 2;
-			else {
+			else if(enemyPos.x < playerPos.x + 75 && enemyPos.x > playerPos.x - 75 && grounded)
 				direction = 0;
+			
+			if(enemyPos.x < playerPos.x + 250 && enemyPos.x > playerPos.x - 250) {
+				
+				if(grounded && getHp() > 0) {
+					int shouldJump = random.nextInt(300);
+					int excecuteJump = random.nextInt(300);
+					if(shouldJump == excecuteJump) {
+						airDirection = direction;
+						jump(delta);
+					}
+				}
 			}
 		}
 		
-		if(!getDamageDelay() && !launched && !stunned)
+		if(alerted && !grounded && airDirection != 0 && !getDamageDelay() && !launched && !stunned) {
+			move(airDirection, delta);
+		} else if(!getDamageDelay() && !launched && !stunned) {
 			move(direction, delta);
+		}
 		
 		if(stunned && grounded) {
 			stunTime -= 0.1f;
@@ -94,14 +115,39 @@ public class Enemy extends Entity {
 		
 		sprite.setPosition(x, y);
 		
-		if(getHp() <= 0) {
+		if(getHp() <= 0 && !launched) {
 			dies(delta, player);
 		}
+		
+		
 		
 	}
 	
 	public void render(SpriteBatch sb) {
 		sprite.draw(sb);
+		if(launched && getHp() > 0) {
+			elapsedTime += Gdx.graphics.getDeltaTime();
+			currentFrame = pwoIndicatorAnim.getKeyFrame(elapsedTime, true);
+			sb.draw(currentFrame, x, y);
+		} else {
+			elapsedTime = 0.0f;
+		}
+	}
+	
+	public void jump(float delta) {
+		y += getJumpHeight() * delta;
+		getHitBox().y = y;
+		getHitBox().x = x;
+		grounded = false;
+	}
+	
+	public void loadAnimations() {
+		for(int i = 0; i < 19; i++) {
+			Texture texture = new Texture(Gdx.files.internal("rawSprites/player/pwoindicator/pwoindicator" + i + ".png"));
+			texture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
+			TextureRegion sprite = new TextureRegion(texture);
+			pwoIndicatorFrames[i] = sprite;
+		}
 	}
 	
 	public void dies(float delta, Rectangle player) {

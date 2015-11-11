@@ -43,7 +43,7 @@ public class TestState {
 	
 	private float hitSplashTime = 0.0f, dialogAlpha = 0.0f;
 	public float groundY = 110, levelWidth;
-	private boolean showSplash = false, movingJoystick = false, hasStarted = false;
+	private boolean showSplash = false, movingJoystick = false, hasStarted = false, pwoActive = false;
 	private float spawnDelayTime = 0;
 	
 	private Vector2 pwoVector, playerVector;
@@ -60,7 +60,7 @@ public class TestState {
 	private Array<SpawnPoint> spawnPoints;
 	private float[] spawnPointsX = new float[5];
 	
-	private boolean cameraShake = false, enemyKilled = false, slowMotion = false, cameraXSet = false, dialog = false;
+	private boolean cameraShake = false, enemyKilled = false, slowMotion = false, cameraXSet = false, dialog = false, boosFight = false;
 	private float cameraShakeDuration = 0.0f, pwoDuration = 0.0f, pwoCameraX = 0.0f, joyStickRingX;
 	
 	private Sprite bgPartZero, bgPartOne, bgPartTwo, bgPartThree, joystickRing, joystick, attackButton, jumpButton;
@@ -190,7 +190,8 @@ public class TestState {
 		if(!player.isStunned())
 			handleJoystick();
 		
-		spawnEnemies();
+		if(!player.isPwoAttack())
+			spawnEnemies();
 	}
 	
 	public void render(SpriteBatch sb) {
@@ -319,14 +320,24 @@ public class TestState {
 					float movement = random.nextInt(4) + 2;
 					float rX = random.nextInt(2);
 					if(rX == 0) {
-						rX = player.getX() + 700;
+						float newX = random.nextInt(100);
+						rX = player.getX() + 700 + newX;
 					} else if(rX == 1) {
-						rX = player.getX() - 700;
+						float newX = random.nextInt(100);
+						rX = player.getX() - 700 - newX;
 					}
-					if(rX < 0) 
-						rX = 800;
-					else if(player.getX() < 100) 
-						rX = 1300;
+					if(rX < 0) {
+						float newX = random.nextInt(100);
+						rX = 800 + newX;
+					} else if(player.getX() < 100) {
+						float newX = random.nextInt(200);
+						rX = 1300 + newX;
+					}
+					
+					if(rX > levelWidth) {
+						int newX = random.nextInt(100);
+						rX = levelWidth - newX;
+					}
 					generated = new Enemy(10, 3, 0, movement, rX, groundY);
 					generated.groundY = groundY;
 					if(hasStarted)
@@ -484,7 +495,7 @@ public class TestState {
 				cameraXSet = true;
 			}
 			for(Enemy e : entities) {
-				if(!e.isLaunched()) {
+				if(!e.isLaunched() && e.getX() > player.getX() - 350 && e.getX() < player.getX() + 450) {
 					float height = (float) random.nextInt(150) + 200;
 					if(height <= 50)
 						height = 350;
@@ -520,76 +531,78 @@ public class TestState {
 			e.setStunned(true);
 			e.setStunTime(3);
 			if(Gdx.input.justTouched() && ScreenManager.getCurrentScreen().inputManager.getIntersecting(e.getHitBox())) {
-				System.out.println(player.getY());
-				player.setPwoFrameNumber(random.nextInt(3));
-				playerVector.set(player.getX() + 50, player.getY() + 50);
+				if(e.getHp() > 0) {
+					System.out.println(player.getY());
+					player.setPwoFrameNumber(random.nextInt(3));
+					playerVector.set(player.getX() + 50, player.getY() + 50);
 
-				//X
-				if(player.getX() < e.getX()) {
-					player.setFacingLeft(false);
-					player.setFacingRight(true);
-					//Y
-					if(player.getY() < e.getY()) {
+					//X
+					if(player.getX() < e.getX()) {
+						player.setFacingLeft(false);
+						player.setFacingRight(true);
+						//Y
+						if(player.getY() < e.getY()) {
+							float dist = (float) random.nextInt(75);
+							pwoVector.y = e.getY() + dist + 50;
+						} else if(player.getY() > e.getY()) {
+							float dist = (float) random.nextInt(75);
+							pwoVector.y = e.getY() - dist + 50;
+						}
 						float dist = (float) random.nextInt(75);
-						pwoVector.y = e.getY() + dist + 50;
-					} else if(player.getY() > e.getY()) {
+
+						player.getStreakSprite().setRotation(0);
+						pwoVector.x = e.getX() + dist + 50;
+						float distance = (float) Math.sqrt((playerVector.x - pwoVector.x) * (playerVector.x - pwoVector.x) +
+								(playerVector.y - pwoVector.y) * (playerVector.y - pwoVector.y));
+						double angle = Math.atan2(playerVector.y - pwoVector.y, playerVector.x - pwoVector.x);
+						player.getStreakSprite().setSize(distance, 100);
+
+						player.setRotation((float) Math.toDegrees(angle) + 180);
+
+						player.getStreakSprite().setPosition(pwoVector.x, pwoVector.y - 50);
+						player.getStreakSprite().setOrigin(0, 50);
+						player.getStreakSprite().setRotation((float) Math.toDegrees(angle));
+					} else if(player.getX() > e.getX()) {
+
+						player.setFacingLeft(true);
+						player.setFacingRight(false);
+
+						//Y
+						if(player.getY() < e.getY()) {
+							float dist = (float) random.nextInt(75);
+							pwoVector.y = e.getY() + dist + 50;
+						} else if(player.getY() > e.getY()) {
+							float dist = (float) random.nextInt(75);
+							pwoVector.y = e.getY() - dist + 50;
+						}
 						float dist = (float) random.nextInt(75);
-						pwoVector.y = e.getY() - dist + 50;
+
+						player.getStreakSprite().setRotation(0);
+						pwoVector.x = e.getX() - dist + 50;
+						float distance = (float) Math.sqrt((playerVector.x - pwoVector.x) * (playerVector.x - pwoVector.x) +
+								(playerVector.y - pwoVector.y) * (playerVector.y - pwoVector.y));
+						double angle = Math.atan2(playerVector.y - pwoVector.y, playerVector.x - pwoVector.x);
+						player.getStreakSprite().setSize(distance, 100);
+						player.setRotation((float) Math.toDegrees(angle));
+
+						player.getStreakSprite().setPosition(pwoVector.x, pwoVector.y - 50);
+						player.getStreakSprite().setOrigin(0, 50);
+						player.getStreakSprite().setRotation((float) Math.toDegrees(angle));
 					}
-					float dist = (float) random.nextInt(75);
-					
-					player.getStreakSprite().setRotation(0);
-					pwoVector.x = e.getX() + dist + 50;
-					float distance = (float) Math.sqrt((playerVector.x - pwoVector.x) * (playerVector.x - pwoVector.x) +
-							(playerVector.y - pwoVector.y) * (playerVector.y - pwoVector.y));
-					double angle = Math.atan2(playerVector.y - pwoVector.y, playerVector.x - pwoVector.x);
-					player.getStreakSprite().setSize(distance, 100);
-					
-					player.setRotation((float) Math.toDegrees(angle) + 180);
-					
-					player.getStreakSprite().setPosition(pwoVector.x, pwoVector.y - 50);
-					player.getStreakSprite().setOrigin(0, 50);
-					player.getStreakSprite().setRotation((float) Math.toDegrees(angle));
-				} else if(player.getX() > e.getX()) {
-					
-					player.setFacingLeft(true);
-					player.setFacingRight(false);
-					
-					//Y
-					if(player.getY() < e.getY()) {
-						float dist = (float) random.nextInt(75);
-						pwoVector.y = e.getY() + dist + 50;
-					} else if(player.getY() > e.getY()) {
-						float dist = (float) random.nextInt(75);
-						pwoVector.y = e.getY() - dist + 50;
-					}
-					float dist = (float) random.nextInt(75);
-					
-					player.getStreakSprite().setRotation(0);
-					pwoVector.x = e.getX() - dist + 50;
-					float distance = (float) Math.sqrt((playerVector.x - pwoVector.x) * (playerVector.x - pwoVector.x) +
-							(playerVector.y - pwoVector.y) * (playerVector.y - pwoVector.y));
-					double angle = Math.atan2(playerVector.y - pwoVector.y, playerVector.x - pwoVector.x);
-					player.getStreakSprite().setSize(distance, 100);
-					player.setRotation((float) Math.toDegrees(angle));
-					
-					player.getStreakSprite().setPosition(pwoVector.x, pwoVector.y - 50);
-					player.getStreakSprite().setOrigin(0, 50);
-					player.getStreakSprite().setRotation((float) Math.toDegrees(angle));
+
+					player.getStreakSprite().setAlpha(1);
+
+					player.setX(pwoVector.x - 50);
+					player.setY(pwoVector.y - 50);
+
+					combo.setComboAmount(combo.getComboAmount() + 1);
+					e.takeDamage(player.getAttackDamage());
+
+					e.attacked(player.getHitBox(), delta);
+					cameraShake = true;
+					cameraShakeDuration = 1f;
+					combo.setComboShow(10);
 				}
-				
-				player.getStreakSprite().setAlpha(1);
-				
-				player.setX(pwoVector.x - 50);
-				player.setY(pwoVector.y - 50);
-				
-				combo.setComboAmount(combo.getComboAmount() + 1);
-//				e.takeDamage(player.getAttackDamage());
-				
-				e.attacked(player.getHitBox(), delta);
-				cameraShake = true;
-				cameraShakeDuration = 1f;
-				combo.setComboShow(10);
 			}
 		}
 		
@@ -598,7 +611,7 @@ public class TestState {
 			if(pwoDuration > 10)
 				pwoDuration = 10;
 		}
-		
+
 		if(pwoDuration == 10) {
 			pwoDuration = 0;
 			player.setPwoAttack(false);
